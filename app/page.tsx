@@ -1,7 +1,6 @@
 import Image from "next/image";
-import Terminal from "../components/Terminal/Terminal";
-import PenguinAscii from "../components/PenguinAscii/PenguinAscii";
 import AnimatedNumberCountdown from "../components/Countdown/AnimatedNumberCountdown";
+import LaptopExperience from "../components/LaptopExperience";
 import clicksPhoto from "../public/clicksphoto.png";
 import ingeniaLogo from "../public/ingenia-logo.png";
 import serpentinas from "../public/serpentinas.png";
@@ -93,24 +92,7 @@ export default function Home() {
         </article>
       </section>
 
-      <section id="terminal" className={styles.terminalShowroom}>
-        <div className={styles.terminalCopy}>
-          <span className={styles.monoLabel}>INTERFACE / 03</span>
-          <h2>BRUTALIST COMMAND CENTER</h2>
-          <p>
-            Un bloque oscuro conserva la terminal y el arte ASCII como el centro
-            tactil de la experiencia.
-          </p>
-        </div>
-
-        <div className={styles.terminalPanel}>
-          <Terminal />
-        </div>
-
-        <div className={styles.asciiPanel}>
-          <PenguinAscii />
-        </div>
-      </section>
+      <LaptopExperience />
     </main>
   );
 }

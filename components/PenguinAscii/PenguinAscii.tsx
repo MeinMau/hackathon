@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import styles from "./PenguinAscii.module.css";
 
 const frames = [String.raw`

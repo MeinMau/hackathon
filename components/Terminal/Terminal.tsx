@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, RefObject, useEffect, useRef, useState } from "react";
 import styles from "./Terminal.module.css";
 
 const intro = [`               +@@-                        
@@ -15,7 +15,14 @@ const intro = [`               +@@-
   "Ingeniería de Software y Desarrollo de Negocios, IEST Anahuac.",
 ];
 
-function TerminalInput({ value, onChange, onSubmit, inputRef }: any) {
+type TerminalInputProps = {
+  value: string;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  inputRef: RefObject<HTMLInputElement | null>;
+};
+
+function TerminalInput({ value, onChange, onSubmit, inputRef }: TerminalInputProps) {
   return (
     <>
       <div className={styles.inputLine}>
@@ -37,13 +44,11 @@ function TerminalInput({ value, onChange, onSubmit, inputRef }: any) {
 
 export default function Terminal() {
   const [output, setOutput] = useState<string[]>([]);
-  const [currentLine, setCurrentLine] = useState("");
-  const [isInputFocused, setIsInputFocused] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!inputValue.trim()) return;
     const input = "C:/hackathon>" + inputValue.trim();
@@ -101,7 +106,7 @@ programa o archivo por lotes ejecutable.
 
           <TerminalInput
             value={inputValue}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setInputValue(e.target.value)
             }
             onSubmit={handleSubmit}

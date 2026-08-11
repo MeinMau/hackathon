@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       
       <body className="min-h-full flex flex-col">
         {children}
-        <script src="/countdown.js?v=2" />
+        <Script src="/countdown.js?v=2" strategy="afterInteractive" />
       </body>
     </html>
   );

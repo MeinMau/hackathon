@@ -2,7 +2,7 @@
   min-height: 100vh;
   background: var(--color-warm-canvas);
   color: var(--color-carbon-black);
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .header {
@@ -291,7 +291,8 @@
 }
 
 .terminalPanel,
-.asciiPanel {
+.asciiPanel,
+.screenOsPanel {
   min-height: 360px;
   overflow: hidden;
   border-radius: 32px;
@@ -306,6 +307,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.screenOsPanel {
+  display: flex;
+  grid-column: 1 / -1;
+  height: clamp(460px, 58vw, 690px);
+  min-height: 460px;
+  border: 1px solid rgba(208, 227, 255, 0.26);
+  background: #151924;
 }
 
 @media (max-width: 920px) {
