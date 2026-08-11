@@ -15,6 +15,38 @@ const intro = [`               +@@-
   "Ingeniería de Software y Desarrollo de Negocios, IEST Anahuac.",
 ];
 
+const hackathonInfo = [
+  String.raw`     _       _                INFORMACION GENERAL`,
+  String.raw`  __| |__   (_) _ __          Hackathon ISND - INGENIA "<in>hack>"`,
+  String.raw` / _  '_ \  | || '_ \         IEST Anahuac`,
+  String.raw`| (_| | | | | || | | |        Sistemas y Negocios Digitales`,
+  String.raw` \__,_| |_| |_||_| |_|        Primer Concurso de Programacion`,
+  "",
+  "La carrera de Ingenieria en Sistemas y Negocios Digitales (ISND) y la",
+  "Sociedad de Alumnos de Ingenieria en Sistemas y Negocios Digitales",
+  "(INGENIA) del IEST Anahuac invitan a estudiantes de preparatoria y",
+  "universidad a formar parte de este espacio para desarrollar pensamiento",
+  "logico, resolucion de problemas y trabajo colaborativo a traves del codigo.",
+  "",
+  "[FECHAS]",
+  "  3 y 4 de septiembre | 8:00 AM - 7:00 PM",
+  "",
+  "[CATEGORIAS]",
+  "  - Preparatoria",
+  "  - Hackathon (Profesional)",
+  "",
+  "[COLABORADORES]",
+  "  Sunshine Snacks    Mini Joy          Nutriviva",
+  "  Lunar accesorios   Pixi Planet       Aura Maquillaje",
+  "  Veintitres Joyeria Blu Coffee        Pokeburrito",
+  "  La marquesita",
+  "",
+  "[REGISTRO]",
+  "  https://forms.gle/XsfQJUWYxTgDEEDWA",
+];
+
+const infoCommands = new Set(["hackaton", "hackathon", "info", "informacion"]);
+
 type TerminalInputProps = {
   value: string;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -59,11 +91,22 @@ export default function Terminal() {
   }
 
   function checkCommand(command: string) {
-    switch (command) {
+    const normalizedCommand = command
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+    const commandTokens = normalizedCommand.match(/[a-z0-9]+/g) ?? [];
+
+    if (commandTokens.some((token) => infoCommands.has(token))) {
+      setOutput((o) => [...o, ...hackathonInfo]);
+      return;
+    }
+
+    switch (normalizedCommand) {
       case "help":
         setOutput((o) => [
           ...o,
-          "Comandos: lp, about, clear",
+          "Comandos: help, about, clear, hackaton, info, informacion",
         ]);
         break;
       case "about":

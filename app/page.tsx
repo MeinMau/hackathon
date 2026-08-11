@@ -66,28 +66,36 @@ export default function Home() {
       <section id="brief" className={styles.cardGrid}>
         <article className={styles.card}>
           <span className={styles.mintTag}>01 / BUILD</span>
-          <h2>Ideas que aterrizan en producto</h2>
+          <h2>Build the Future</h2>
           <p>
-            El reto se enfoca en convertir problemas de negocio en prototipos
-            funcionales con una narrativa clara.
+            Demuestra tu talento este 3 y 4 de septiembre desarrollando soluciones
+            innovadoras desde cero. Atrévete a resolver problemas reales utilizando tu
+            creatividad, lógica y habilidades tecnológicas en un ambiente de alta energía
+            y colaboración contra reloj.
           </p>
         </article>
 
         <article className={styles.card}>
-          <span className={styles.mintTag}>02 / PRESENT</span>
-          <h2>Demo, criterio y ejecucion</h2>
+          <span className={styles.mintTag}>02 / HONOR</span>
+          <h2>Code of Honor</h2>
           <p>
-            Cada equipo prepara una propuesta que pueda explicarse rapido,
-            defenderse con datos y sentirse lista para usuarios reales.
+            Creemos en la originalidad y la innovación auténtica. Para garantizar un
+            terreno de juego nivelado para todos los equipos, el núcleo de tu proyecto
+            debe nacer durante el evento. Puedes apalancarte de tus propias librerías
+            previas o repositorios personales, pero el verdadero impacto se medirá por lo
+            que logres construir durante el transcurso de la competencia.
           </p>
         </article>
 
         <article className={styles.invertedCard}>
-          <span className={styles.yellowMark}>LIVE SYSTEM</span>
-          <h2>Modo terminal activado</h2>
+          <span className={styles.yellowMark}>03 / CONNECT</span>
+          <h2>Connect & Elevate</h2>
           <p>
-            La estetica mantiene el caracter tecnico del proyecto original,
-            ahora dentro de un showroom editorial.
+            Más que una competencia, esta es tu plataforma de despegue dentro del
+            ecosistema de los sistemas y los negocios digitales. Conecta directamente con
+            partners de la industria del software, recibe retroalimentación de mentores
+            expertos y haz networking con otros desarrolladores apasionados que comparten
+            tu visión.
           </p>
         </article>
       </section>

@@ -218,6 +218,38 @@ const CMD_INTRO = [
   "Ingeniería de Software y Desarrollo de Negocios, IEST Anahuac.",
 ];
 
+const HACKATHON_INFO_COMMANDS = new Set(["hackaton", "hackathon", "info", "informacion"]);
+
+const HACKATHON_INFO = [
+  "     _       _                 INFORMACION GENERAL",
+  "  __| |__   (_) _ __           Hackathon ISND - INGENIA \"<in>hack>\"",
+  " / _  '_ \\  | || '_ \\          IEST Anahuac",
+  "| (_| | | | | || | | |         Sistemas y Negocios Digitales",
+  " \\__,_| |_| |_||_| |_|         Primer Concurso de Programacion",
+  "",
+  "La carrera de Ingenieria en Sistemas y Negocios Digitales (ISND) y la",
+  "Sociedad de Alumnos de Ingenieria en Sistemas y Negocios Digitales",
+  "(INGENIA) del IEST Anahuac invitan a estudiantes de preparatoria y",
+  "universidad a formar parte de este espacio para desarrollar pensamiento",
+  "logico, resolucion de problemas y trabajo colaborativo a traves del codigo.",
+  "",
+  "[FECHAS]",
+  "  3 y 4 de septiembre | 8:00 AM - 7:00 PM",
+  "",
+  "[CATEGORIAS]",
+  "  - Preparatoria",
+  "  - Hackathon (Profesional)",
+  "",
+  "[COLABORADORES]",
+  "  Sunshine Snacks    Mini Joy          Nutriviva",
+  "  Lunar accesorios   Pixi Planet       Aura Maquillaje",
+  "  Veintitres Joyeria Blu Coffee        Pokeburrito",
+  "  La marquesita",
+  "",
+  "[REGISTRO]",
+  "  https://forms.gle/XsfQJUWYxTgDEEDWA",
+];
+
 function CmdApp({ onOpenApp }: CmdAppProps) {
   const [output, setOutput] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -232,10 +264,18 @@ function CmdApp({ onOpenApp }: CmdAppProps) {
 
   function resolveCommand(rawCommand: string) {
     const command = rawCommand.trim();
-    const normalizedCommand = command.toLowerCase();
+    const normalizedCommand = command
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+    const commandTokens = normalizedCommand.match(/[a-z0-9]+/g) ?? [];
 
     if (!command) {
       return [];
+    }
+
+    if (commandTokens.some((token) => HACKATHON_INFO_COMMANDS.has(token))) {
+      return HACKATHON_INFO;
     }
 
     if (normalizedCommand === "clear" || normalizedCommand === "cls") {
@@ -247,6 +287,7 @@ function CmdApp({ onOpenApp }: CmdAppProps) {
       return [
         "Comandos disponibles:",
         "help, about, clear, cls, dir, date, time, lp",
+        "hackaton, hackathon, info, informacion",
         "open notas, open navegador, open cmd",
       ];
     }
