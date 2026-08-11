@@ -2,57 +2,60 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  color: #33ff33;
-  font-family: Consolas, monospace;
+  width: 100%;
+  gap: clamp(4px, 0.8vw, 10px);
+  color: var(--color-paper-white);
+  font-family: Impact, "Arial Narrow", var(--font-geist-sans), sans-serif;
 }
 
 .segmentGroup {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: clamp(4px, 0.7vw, 9px);
 }
 
 .segment {
   display: flex;
-  min-width: 74px;
+  min-width: clamp(52px, 5.4vw, 82px);
   flex-direction: column;
   align-items: center;
 }
 
 .number {
-  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-size: clamp(38px, 4.8vw, 68px);
   font-weight: 700;
-  line-height: 1;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
   font-variant-numeric: tabular-nums;
 }
 
 .label {
   margin-top: 8px;
-  color: rgba(51, 255, 51, 0.68);
-  font-size: 0.78rem;
-  letter-spacing: 0;
+  color: var(--color-smoke);
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: -0.03em;
   text-transform: uppercase;
 }
 
 .separator {
-  color: rgba(51, 255, 51, 0.75);
-  font-size: clamp(1.6rem, 4vw, 2.5rem);
+  color: var(--color-universe);
+  font-size: clamp(32px, 4.2vw, 54px);
   font-weight: 700;
-  line-height: 1;
+  line-height: 0.9;
 }
 
 @media (max-width: 680px) {
   .countdown,
   .segmentGroup {
-    gap: 8px;
+    gap: 6px;
   }
 
   .segment {
-    min-width: 52px;
+    min-width: 44px;
   }
 
   .label {
-    font-size: 0.62rem;
+    font-size: 0.55rem;
   }
 }
