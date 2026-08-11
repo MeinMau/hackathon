@@ -1,32 +1,106 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import Terminal from "../components/Terminal/Terminal";
-import PenguinAscii from "../components/PenguinAscii/PenguinAscii";
+import Image from "next/image";
+import AnimatedNumberCountdown from "../components/Countdown/AnimatedNumberCountdown";
+import LaptopExperience from "../components/LaptopExperience";
+import clicksPhoto from "../public/clicksphoto.png";
+import ingeniaLogo from "../public/ingenia-logo.png";
+import serpentinas from "../public/serpentinas.png";
 import styles from "./page.module.css";
 
+const countdownEndDate = "2026-09-03T08:00:00-06:00";
+
 export default function Home() {
-  const [isSplashVisible, setIsSplashVisible] = useState(true);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setIsSplashVisible(false);
-    }, 2200);
-
-    return () => window.clearTimeout(timer);
-  }, []);
-
   return (
-    <>
-      <main className={styles.page}>
-        <div className={styles.terminalPanel}>
-          <Terminal />
+    <main className={styles.page}>
+      <header className={styles.header}>
+        <a className={styles.brand} href="#">
+          <Image src={ingeniaLogo} alt="Ingenia" priority />
+        </a>
+        <nav className={styles.navPill} aria-label="Main navigation">
+          <a href="#">Inicio</a>
+          <a href="#brief">Solutions</a>
+          <a href="#brief">Use Cases</a>
+          <a href="#terminal">Resources</a>
+          <a href="#brief">Plans</a>
+          <a href="#terminal">Terminal</a>
+        </nav>
+        <a className={styles.navAction} href="https://forms.gle/XsfQJUWYxTgDEEDWA" target="_blank">
+          Inscribete
+        </a>
+      </header>
+
+      <section className={styles.hero}>
+        <div className={styles.heroCopy}>
+          <h1>
+            CREA
+            <br />
+            IMAGINA
+            <br />
+            INGENIA
+          </h1>
+          <p>
+            Hackathon ISND e INGENIA para estudiantes de preparatoria y universidad. Fortalece pensamiento lógico, resolución de problemas y trabajo colaborativo a través del código.
+          </p>
         </div>
 
-        <div className={styles.asciiPanel}>
-          <PenguinAscii />
+        <div className={styles.heroCountdown} aria-label="Countdown">
+          <Image
+            className={`${styles.countdownDecoration} ${styles.clicksPhoto}`}
+            src={clicksPhoto}
+            alt=""
+            aria-hidden="true"
+            priority
+          />
+          <Image
+            className={`${styles.countdownDecoration} ${styles.serpentinas}`}
+            src={serpentinas}
+            alt=""
+            aria-hidden="true"
+            priority
+          />
+          <span className={styles.monoLabel}>TIME REMAINING</span>
+          <AnimatedNumberCountdown endDate={countdownEndDate} />
+          <p>3 de septiembre de 2026, 8:00 AM</p>
         </div>
-      </main>
-    </>
+      </section>
+
+      <section id="brief" className={styles.cardGrid}>
+        <article className={styles.card}>
+          <span className={styles.mintTag}>01 / BUILD</span>
+          <h2>Build the Future</h2>
+          <p>
+            Demuestra tu talento este 3 y 4 de septiembre desarrollando soluciones
+            innovadoras desde cero. Atrévete a resolver problemas reales utilizando tu
+            creatividad, lógica y habilidades tecnológicas en un ambiente de alta energía
+            y colaboración contra reloj.
+          </p>
+        </article>
+
+        <article className={styles.card}>
+          <span className={styles.mintTag}>02 / HONOR</span>
+          <h2>Code of Honor</h2>
+          <p>
+            Creemos en la originalidad y la innovación auténtica. Para garantizar un
+            terreno de juego nivelado para todos los equipos, el núcleo de tu proyecto
+            debe nacer durante el evento. Puedes apalancarte de tus propias librerías
+            previas o repositorios personales, pero el verdadero impacto se medirá por lo
+            que logres construir durante el transcurso de la competencia.
+          </p>
+        </article>
+
+        <article className={styles.invertedCard}>
+          <span className={styles.yellowMark}>03 / CONNECT</span>
+          <h2>Connect & Elevate</h2>
+          <p>
+            Más que una competencia, esta es tu plataforma de despegue dentro del
+            ecosistema de los sistemas y los negocios digitales. Conecta directamente con
+            partners de la industria del software, recibe retroalimentación de mentores
+            expertos y haz networking con otros desarrolladores apasionados que comparten
+            tu visión.
+          </p>
+        </article>
+      </section>
+
+      <LaptopExperience />
+    </main>
   );
 }

@@ -1,0 +1,91 @@
+.section {
+  position: relative;
+  height: 430vh;
+  min-height: 3200px;
+  margin-top: 32px;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(208, 227, 255, 0.26), transparent 34%),
+    linear-gradient(180deg, var(--color-warm-canvas) 0%, #081f5c 18%, #06113d 100%);
+}
+
+.stickyScene {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  min-height: 620px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(112, 150, 209, 0.34), transparent 40%),
+    linear-gradient(180deg, #0b2363 0%, #06113d 58%, #03071d 100%);
+  isolation: isolate;
+}
+
+.stickyScene::before {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 0;
+  height: 34vh;
+  min-height: 220px;
+  content: "";
+  background:
+    linear-gradient(180deg, transparent, rgba(3, 7, 29, 0.96)),
+    repeating-linear-gradient(
+      90deg,
+      rgba(208, 227, 255, 0.08) 0,
+      rgba(208, 227, 255, 0.08) 1px,
+      transparent 1px,
+      transparent 84px
+    );
+  transform: perspective(900px) rotateX(66deg);
+  transform-origin: bottom center;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas {
+  z-index: 1;
+  display: block;
+}
+
+.screenSurface {
+  position: absolute;
+  z-index: 2;
+  overflow: hidden;
+  border-radius: 0;
+  background: #06113d;
+  pointer-events: none;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, width, height, left, top;
+}
+
+.screenSurface[data-fullscreen="false"] {
+  box-shadow:
+    inset 0 0 0 1px rgba(208, 227, 255, 0.46),
+    0 0 36px rgba(112, 150, 209, 0.22);
+}
+
+.screenSurface[data-interactive="true"] {
+  pointer-events: auto;
+}
+
+.screenSurface > * {
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 920px) {
+  .section {
+    min-height: 2800px;
+  }
+
+  .stickyScene {
+    min-height: 560px;
+  }
+}

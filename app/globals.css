@@ -1,8 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-planetary: #334eac;
+  --color-venus: #bad6eb;
+  --color-meteor: #f7f2eb;
+  --color-galaxy: #081f5c;
+  --color-universe: #7096d1;
+  --color-milky-way: #fff9f0;
+  --color-sky: #d0e3ff;
+  --color-carbon-black: var(--color-galaxy);
+  --color-paper-white: var(--color-milky-way);
+  --color-warm-canvas: var(--color-venus);
+  --color-mist-gray: var(--color-sky);
+  --color-ash: var(--color-universe);
+  --color-smoke: #6f82a8;
+  --color-slate: #253a7a;
+  --color-graphite: var(--color-galaxy);
+  --color-mint-chip: var(--color-sky);
+  --color-voltage-yellow: var(--color-meteor);
+  --surface-canvas: var(--color-warm-canvas);
+  --surface-card: var(--color-paper-white);
+  --surface-inverted: var(--color-carbon-black);
+  --background: var(--surface-canvas);
+  --foreground: var(--color-carbon-black);
 }
 
 @theme inline {
@@ -12,15 +32,18 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family:  monospace;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
 }
