@@ -1,12 +1,56 @@
 import Image from "next/image";
 import AnimatedNumberCountdown from "../components/Countdown/AnimatedNumberCountdown";
 import LaptopExperience from "../components/LaptopExperience";
+import { MarqueeLogoScroller } from "../components/ui/marquee-logo-scroller";
 import clicksPhoto from "../public/clicksphoto.png";
 import ingeniaLogo from "../public/ingenia-logo.png";
 import serpentinas from "../public/serpentinas.png";
 import styles from "./page.module.css";
 
 const countdownEndDate = "2026-09-03T08:00:00-06:00";
+
+const sponsorLogos = [
+  {
+    src: "https://svgl.app/library/procure.svg",
+    alt: "Procure",
+    gradient: { from: "#668CFF", via: "#0049FF", to: "#003199" },
+  },
+  {
+    src: "https://svgl.app/library/shopify.svg",
+    alt: "Shopify",
+    gradient: { from: "#D9FF5A", via: "#95BF47", to: "#5E8E3E" },
+  },
+  {
+    src: "https://svgl.app/library/blender.svg",
+    alt: "Blender",
+    gradient: { from: "#FFB066", via: "#EA7600", to: "#8F4400" },
+  },
+  {
+    src: "https://svgl.app/library/figma.svg",
+    alt: "Figma",
+    gradient: { from: "#C4C2FF", via: "#9896FF", to: "#5B4DCC" },
+  },
+  {
+    src: "https://svgl.app/library/spotify.svg",
+    alt: "Spotify",
+    gradient: { from: "#77F28B", via: "#1ED760", to: "#107A36" },
+  },
+  {
+    src: "https://svgl.app/library/lottielab.svg",
+    alt: "LottieLab",
+    gradient: { from: "#D9FF5A", via: "#AFFF01", to: "#7A9900" },
+  },
+  {
+    src: "https://svgl.app/library/google-cloud.svg",
+    alt: "Google Cloud",
+    gradient: { from: "#8AA7FF", via: "#5F86FF", to: "#3A5ACC" },
+  },
+  {
+    src: "https://svgl.app/library/bing.svg",
+    alt: "Bing",
+    gradient: { from: "#67F0D1", via: "#2AE5B9", to: "#1B8F72" },
+  },
+];
 
 export default function Home() {
   return (
@@ -62,6 +106,14 @@ export default function Home() {
           <p>3 de septiembre de 2026, 8:00 AM</p>
         </div>
       </section>
+
+      <MarqueeLogoScroller
+        className={styles.sponsors}
+        title="Sponsors"
+        description="Aliados que impulsan el hackathon, conectan talento joven con la industria y hacen posible una experiencia de alto impacto."
+        logos={sponsorLogos}
+        speed="normal"
+      />
 
       <section id="brief" className={styles.cardGrid}>
         <article className={styles.card}>

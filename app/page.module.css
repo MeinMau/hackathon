@@ -51,12 +51,12 @@
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 0.98fr) minmax(380px, 0.82fr);
-  align-items: end;
+  align-items: center;
   gap: 52px;
   width: min(1200px, calc(100% - 72px));
-  min-height: calc(100vh - 120px);
+  min-height: auto;
   margin: 0 auto;
-  padding: 58px 0 42px;
+  padding: 88px 0 42px;
 }
 
 .heroCopy {
@@ -221,10 +221,15 @@
   z-index: 2;
 }
 
+.sponsors,
 .cardGrid,
 .terminalShowroom {
   width: min(1200px, calc(100% - 72px));
   margin: 0 auto 80px;
+}
+
+.sponsors {
+  margin-bottom: 24px;
 }
 
 .cardGrid {
@@ -361,10 +366,15 @@
   }
 
   .hero,
+  .sponsors,
   .cardGrid,
   .terminalShowroom {
     width: min(100% - 24px, 1200px);
     margin-bottom: 48px;
+  }
+
+  .sponsors {
+    margin-bottom: 20px;
   }
 
   .hero {
