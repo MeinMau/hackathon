@@ -17,15 +17,15 @@ export default function Home() {
           <Image src={ingeniaLogo} alt="Ingenia" priority />
         </a>
         <nav className={styles.navPill} aria-label="Main navigation">
-          <a href="#brief">Platform</a>
+          <a href="#">Inicio</a>
           <a href="#brief">Solutions</a>
           <a href="#brief">Use Cases</a>
           <a href="#terminal">Resources</a>
           <a href="#brief">Plans</a>
           <a href="#terminal">Terminal</a>
         </nav>
-        <a className={styles.navAction} href="#terminal">
-          Schedule a Demo
+        <a className={styles.navAction} href="https://forms.gle/XsfQJUWYxTgDEEDWA" target="_blank">
+          Inscribete
         </a>
       </header>
 
