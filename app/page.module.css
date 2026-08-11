@@ -10,8 +10,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 72px;
-  width: min(1200px, calc(100% - 72px));
+  height: 96px;
+  width: min(1280px, calc(100% - 72px));
   margin: 0 auto;
 }
 
@@ -21,7 +21,7 @@
 }
 
 .brand img {
-  width: 124px;
+  width: 168px;
   height: auto;
   object-fit: contain;
 }
@@ -29,22 +29,22 @@
 .navPill {
   display: flex;
   align-items: center;
-  gap: 32px;
-  min-height: 36px;
+  gap: 38px;
+  min-height: 46px;
   border-radius: 48px;
   background: rgba(255, 249, 240, 0.82);
-  padding: 0 34px;
+  padding: 0 44px;
   color: var(--color-galaxy);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 
 .navAction {
-  border-radius: 7px;
+  border-radius: 9px;
   background: var(--color-galaxy);
   color: var(--color-paper-white);
-  padding: 13px 22px;
-  font-size: 12px;
+  padding: 17px 28px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -54,7 +54,7 @@
   align-items: end;
   gap: 52px;
   width: min(1200px, calc(100% - 72px));
-  min-height: calc(100vh - 96px);
+  min-height: calc(100vh - 120px);
   margin: 0 auto;
   padding: 58px 0 42px;
 }
@@ -149,10 +149,10 @@
 }
 
 .serpentinas {
-  right: -48px;
-  bottom: -44px;
+  right: -42px;
+  bottom: -46px;
   z-index: 3;
-  width: 158px;
+  width: 150px;
 }
 
 .heroCountdown::before,
@@ -325,9 +325,9 @@
   }
 
   .serpentinas {
-    right: -24px;
-    bottom: -34px;
-    width: 126px;
+    right: -30px;
+    bottom: -38px;
+    width: 124px;
   }
 
   .cardGrid {
@@ -383,9 +383,9 @@
   }
 
   .serpentinas {
-    right: -14px;
+    right: -18px;
     bottom: -28px;
-    width: 98px;
+    width: 96px;
   }
 
   .header {
