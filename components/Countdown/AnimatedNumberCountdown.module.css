@@ -1,0 +1,58 @@
+.countdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #33ff33;
+  font-family: Consolas, monospace;
+}
+
+.segmentGroup {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.segment {
+  display: flex;
+  min-width: 74px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.number {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  margin-top: 8px;
+  color: rgba(51, 255, 51, 0.68);
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.separator {
+  color: rgba(51, 255, 51, 0.75);
+  font-size: clamp(1.6rem, 4vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1;
+}
+
+@media (max-width: 680px) {
+  .countdown,
+  .segmentGroup {
+    gap: 8px;
+  }
+
+  .segment {
+    min-width: 52px;
+  }
+
+  .label {
+    font-size: 0.62rem;
+  }
+}
