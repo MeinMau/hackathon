@@ -72,7 +72,7 @@
   font-family: Impact, "Arial Narrow", var(--font-geist-sans), sans-serif;
   font-size: clamp(70px, 8.8vw, 112px);
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.01em;
   line-height: 0.92;
   text-transform: uppercase;
 }

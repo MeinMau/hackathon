@@ -32,18 +32,14 @@ export default function Home() {
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
           <h1>
-            BORN FROM
+            CREA
             <br />
-            THE AI ERA.
+            IMAGINA
             <br />
-            NOT BOLTED
-            <br />
-            ONTO IT.
+            INGENIA
           </h1>
           <p>
-            Hackathon ISND reune ingenieria, negocio e inteligencia artificial.
-            Construye un prototipo listo para demo antes de que el reloj llegue
-            a cero.
+            Hackathon ISND e INGENIA para estudiantes de preparatoria y universidad. Fortalece pensamiento lógico, resolución de problemas y trabajo colaborativo a través del código.
           </p>
         </div>
 
