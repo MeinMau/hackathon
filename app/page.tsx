@@ -11,43 +11,43 @@ const countdownEndDate = "2026-09-03T08:00:00-06:00";
 
 const sponsorLogos = [
   {
-    src: "https://svgl.app/library/procure.svg",
-    alt: "Procure",
+    src: "/sponsors/transparent/blu-transparent.png",
+    alt: "Blu",
     gradient: { from: "#668CFF", via: "#0049FF", to: "#003199" },
   },
   {
-    src: "https://svgl.app/library/shopify.svg",
-    alt: "Shopify",
-    gradient: { from: "#D9FF5A", via: "#95BF47", to: "#5E8E3E" },
+    src: "/sponsors/transparent/fesal-transparent.png",
+    alt: "Fesal",
+    gradient: { from: "#F7F2EB", via: "#BAD6EB", to: "#7096D1" },
   },
   {
-    src: "https://svgl.app/library/blender.svg",
-    alt: "Blender",
-    gradient: { from: "#FFB066", via: "#EA7600", to: "#8F4400" },
+    src: "/sponsors/transparent/isnd-recursos-transparent.png",
+    alt: "ISND Recursos",
+    gradient: { from: "#D0E3FF", via: "#7096D1", to: "#334EAC" },
   },
   {
-    src: "https://svgl.app/library/figma.svg",
-    alt: "Figma",
+    src: "/sponsors/transparent/sunshine-transparent.png",
+    alt: "Sunshine",
+    gradient: { from: "#FFE766", via: "#FFCE00", to: "#B38F00" },
+  },
+  {
+    src: "/sponsors/transparent/lunar-transparent.png",
+    alt: "Lunar",
     gradient: { from: "#C4C2FF", via: "#9896FF", to: "#5B4DCC" },
   },
   {
-    src: "https://svgl.app/library/spotify.svg",
-    alt: "Spotify",
+    src: "/sponsors/transparent/marquesitas-transparent.png",
+    alt: "Marquesitas",
+    gradient: { from: "#FFB066", via: "#EA7600", to: "#8F4400" },
+  },
+  {
+    src: "/sponsors/transparent/pokeburrito-transparent.png",
+    alt: "Pokeburrito",
     gradient: { from: "#77F28B", via: "#1ED760", to: "#107A36" },
   },
   {
-    src: "https://svgl.app/library/lottielab.svg",
-    alt: "LottieLab",
-    gradient: { from: "#D9FF5A", via: "#AFFF01", to: "#7A9900" },
-  },
-  {
-    src: "https://svgl.app/library/google-cloud.svg",
-    alt: "Google Cloud",
-    gradient: { from: "#8AA7FF", via: "#5F86FF", to: "#3A5ACC" },
-  },
-  {
-    src: "https://svgl.app/library/bing.svg",
-    alt: "Bing",
+    src: "/sponsors/transparent/veintitres-transparent.png",
+    alt: "Veintitres",
     gradient: { from: "#67F0D1", via: "#2AE5B9", to: "#1B8F72" },
   },
 ];
