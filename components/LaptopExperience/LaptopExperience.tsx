@@ -106,115 +106,17 @@ function createProjectiveCssMatrix(
   return `matrix3d(${matrix.map(formatCssNumber).join(",")})`;
 }
 
-function createRoundedRectShape(width: number, height: number, radius: number) {
-  const safeRadius = Math.min(radius, width / 2, height / 2);
-  const halfWidth = width / 2;
-  const halfHeight = height / 2;
-  const shape = new THREE.Shape();
-
-  shape.moveTo(-halfWidth + safeRadius, -halfHeight);
-  shape.lineTo(halfWidth - safeRadius, -halfHeight);
-  shape.quadraticCurveTo(halfWidth, -halfHeight, halfWidth, -halfHeight + safeRadius);
-  shape.lineTo(halfWidth, halfHeight - safeRadius);
-  shape.quadraticCurveTo(halfWidth, halfHeight, halfWidth - safeRadius, halfHeight);
-  shape.lineTo(-halfWidth + safeRadius, halfHeight);
-  shape.quadraticCurveTo(-halfWidth, halfHeight, -halfWidth, halfHeight - safeRadius);
-  shape.lineTo(-halfWidth, -halfHeight + safeRadius);
-  shape.quadraticCurveTo(-halfWidth, -halfHeight, -halfWidth + safeRadius, -halfHeight);
-
-  return shape;
-}
-
-function createRoundedSlabGeometry(
-  width: number,
-  height: number,
-  depth: number,
-  radius: number,
-  bevel: number,
-) {
-  const geometry = new THREE.ExtrudeGeometry(createRoundedRectShape(width, height, radius), {
-    depth,
-    bevelEnabled: bevel > 0,
-    bevelSegments: 7,
-    bevelSize: bevel,
-    bevelThickness: bevel,
-    curveSegments: 14,
-  });
-
-  geometry.center();
-  geometry.computeVertexNormals();
-
-  return geometry;
-}
-
-function createHorizontalRoundedSlabGeometry(
-  width: number,
-  depth: number,
-  height: number,
-  radius: number,
-  bevel: number,
-) {
-  const geometry = createRoundedSlabGeometry(width, depth, height, radius, bevel);
-  geometry.rotateX(Math.PI / 2);
-  geometry.computeVertexNormals();
-
-  return geometry;
-}
-
-function setRoundedSlabGeometry(
-  mesh: THREE.Mesh,
-  width: number,
-  height: number,
-  depth: number,
-  radius: number,
-  bevel: number,
-) {
-  mesh.geometry.dispose();
-  mesh.geometry = createRoundedSlabGeometry(width, height, depth, radius, bevel);
-}
-
-function setHorizontalRoundedSlabGeometry(
-  mesh: THREE.Mesh,
-  width: number,
-  depth: number,
-  height: number,
-  radius: number,
-  bevel: number,
-) {
-  mesh.geometry.dispose();
-  mesh.geometry = createHorizontalRoundedSlabGeometry(width, depth, height, radius, bevel);
-}
-
-function disposeMeshGeometry(object: THREE.Object3D) {
-  object.traverse((child) => {
-    if (child instanceof THREE.Mesh) {
-      child.geometry.dispose();
-    }
-  });
-}
-
-function clearMeshGroup(group: THREE.Group) {
-  group.children.forEach(disposeMeshGeometry);
-  group.clear();
-}
-
 function createLaptopMaterials() {
   return {
-    base: new THREE.MeshPhysicalMaterial({
-      color: 0x123e7a,
-      roughness: 0.24,
-      metalness: 0.78,
-      clearcoat: 0.58,
-      clearcoatRoughness: 0.18,
-      reflectivity: 0.62,
+    base: new THREE.MeshStandardMaterial({
+      color: 0x07194d,
+      roughness: 0.62,
+      metalness: 0.22,
     }),
-    edge: new THREE.MeshPhysicalMaterial({
-      color: 0x0f376e,
-      roughness: 0.2,
-      metalness: 0.82,
-      clearcoat: 0.66,
-      clearcoatRoughness: 0.14,
-      reflectivity: 0.68,
+    edge: new THREE.MeshStandardMaterial({
+      color: 0x0d2d7b,
+      roughness: 0.48,
+      metalness: 0.28,
     }),
     screenGlass: new THREE.MeshStandardMaterial({
       color: 0x06113d,
@@ -223,60 +125,11 @@ function createLaptopMaterials() {
       emissive: 0x102b72,
       emissiveIntensity: 0.34,
     }),
-    hinge: new THREE.MeshPhysicalMaterial({
-      color: 0x1b4f93,
-      roughness: 0.22,
-      metalness: 0.86,
-      clearcoat: 0.48,
-      clearcoatRoughness: 0.16,
-      reflectivity: 0.66,
-    }),
-    keyboardWell: new THREE.MeshPhysicalMaterial({
-      color: 0x0b1b2f,
-      roughness: 0.3,
-      metalness: 0.46,
-      clearcoat: 0.36,
-      clearcoatRoughness: 0.2,
-    }),
-    key: new THREE.MeshPhysicalMaterial({
-      color: 0x1f2c3b,
-      roughness: 0.32,
+    hinge: new THREE.MeshStandardMaterial({
+      color: 0x334eac,
+      roughness: 0.5,
       metalness: 0.38,
-      clearcoat: 0.28,
-      clearcoatRoughness: 0.22,
     }),
-    touchpad: new THREE.MeshPhysicalMaterial({
-      color: 0x2a6fa5,
-      roughness: 0.14,
-      metalness: 0.62,
-      clearcoat: 0.78,
-      clearcoatRoughness: 0.1,
-      reflectivity: 0.76,
-    }),
-    touchpadRim: new THREE.MeshPhysicalMaterial({
-      color: 0x6ea4da,
-      roughness: 0.18,
-      metalness: 0.7,
-      clearcoat: 0.62,
-      clearcoatRoughness: 0.12,
-      reflectivity: 0.7,
-    }),
-    glow: new THREE.MeshBasicMaterial({
-      color: 0xd0e3ff,
-      transparent: true,
-      opacity: 0.16,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-    }),
-    cameraLens: new THREE.MeshBasicMaterial({ color: 0x07101c }),
-    cameraGlass: new THREE.MeshBasicMaterial({
-      color: 0x7aa9ff,
-      transparent: true,
-      opacity: 0.34,
-      depthWrite: false,
-    }),
-    cameraSensor: new THREE.MeshBasicMaterial({ color: 0x8fb8d4 }),
   };
 }
 
@@ -291,107 +144,21 @@ function calculateLayout(width: number, height: number): LaptopLayout {
     screenHeight,
     lidWidth: screenWidth + bezel * 2,
     lidHeight: screenHeight + bezel * 2,
-    baseWidth: screenWidth + bezel * 2,
+    baseWidth: screenWidth + 0.62,
     baseDepth: LAPTOP_MOTION.baseDepth,
     baseThickness: LAPTOP_MOTION.baseThickness,
     bezel,
   };
 }
 
+function setBoxGeometry(mesh: THREE.Mesh, width: number, height: number, depth: number) {
+  mesh.geometry.dispose();
+  mesh.geometry = new THREE.BoxGeometry(width, height, depth);
+}
+
 function setPlaneGeometry(mesh: THREE.Mesh, width: number, height: number) {
   mesh.geometry.dispose();
   mesh.geometry = new THREE.PlaneGeometry(width, height);
-}
-
-const KEY_ROWS = [
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [1.18, 1, 1, 1, 1, 1, 1, 1, 1.18],
-  [1.34, 1, 1, 1, 1, 1, 1, 1.34],
-  [1.66, 1, 1, 1, 1, 1, 1.66],
-  [1.24, 1.08, 4.1, 1.08, 1.24],
-] as const;
-
-function addDeckDetails(
-  group: THREE.Group,
-  materials: ReturnType<typeof createLaptopMaterials>,
-  layout: LaptopLayout,
-) {
-  clearMeshGroup(group);
-
-  const topY = layout.baseThickness / 2;
-  const keyboardWidth = Math.min(layout.baseWidth * 0.65, 2.24);
-  const keyboardDepth = Math.min(layout.baseDepth * 0.31, 0.58);
-  const keyboardZ = -layout.baseDepth * 0.17;
-  const keyGap = 0.016;
-  const rowGap = 0.016;
-  const keyDepth = (keyboardDepth - rowGap * (KEY_ROWS.length - 1)) / KEY_ROWS.length;
-
-  const keyboardWell = new THREE.Mesh(
-    createHorizontalRoundedSlabGeometry(
-      keyboardWidth + 0.055,
-      keyboardDepth + 0.045,
-      0.009,
-      0.04,
-      0.003,
-    ),
-    materials.keyboardWell,
-  );
-  keyboardWell.position.set(0, topY + 0.007, keyboardZ);
-  group.add(keyboardWell);
-
-  KEY_ROWS.forEach((row, rowIndex) => {
-    const rowUnits = row.reduce((total, unit) => total + unit, 0);
-    const keyUnitWidth = (keyboardWidth - keyGap * (row.length - 1)) / rowUnits;
-    const keyZ = keyboardZ - keyboardDepth / 2 + keyDepth / 2 + rowIndex * (keyDepth + rowGap);
-    let keyX = -keyboardWidth / 2;
-
-    row.forEach((unit) => {
-      const keyWidth = keyUnitWidth * unit;
-      const key = new THREE.Mesh(
-        createHorizontalRoundedSlabGeometry(
-          keyWidth,
-          keyDepth,
-          0.024,
-          Math.min(keyWidth, keyDepth) * 0.22,
-          0.004,
-        ),
-        materials.key,
-      );
-
-      key.position.set(keyX + keyWidth / 2, topY + 0.024, keyZ);
-      group.add(key);
-      keyX += keyWidth + keyGap;
-    });
-  });
-
-  const touchpadWidth = Math.min(layout.baseWidth * 0.34, 1.18);
-  const touchpadDepth = Math.min(layout.baseDepth * 0.24, 0.5);
-  const touchpadZ = layout.baseDepth * 0.28;
-  const touchpadRim = new THREE.Mesh(
-    createHorizontalRoundedSlabGeometry(touchpadWidth + 0.052, touchpadDepth + 0.046, 0.01, 0.058, 0.003),
-    materials.touchpadRim,
-  );
-  const touchpad = new THREE.Mesh(
-    createHorizontalRoundedSlabGeometry(touchpadWidth, touchpadDepth, 0.011, 0.052, 0.003),
-    materials.touchpad,
-  );
-
-  touchpadRim.position.set(0, topY + 0.008, touchpadZ);
-  touchpad.position.set(0, topY + 0.018, touchpadZ);
-  group.add(touchpadRim, touchpad);
-
-  const frontScoop = new THREE.Mesh(
-    createHorizontalRoundedSlabGeometry(Math.min(layout.baseWidth * 0.18, 0.62), 0.038, 0.007, 0.018, 0.002),
-    materials.keyboardWell,
-  );
-  const statusLight = new THREE.Mesh(
-    createHorizontalRoundedSlabGeometry(0.052, 0.01, 0.004, 0.005, 0.001),
-    materials.glow,
-  );
-
-  frontScoop.position.set(0, topY + 0.01, layout.baseDepth / 2 - 0.055);
-  statusLight.position.set(layout.baseWidth * 0.31, topY + 0.018, layout.baseDepth / 2 - 0.066);
-  group.add(frontScoop, statusLight);
 }
 
 export default function LaptopExperience() {
@@ -429,14 +196,7 @@ export default function LaptopExperience() {
     const lidMesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), materials.edge);
     const glassMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), materials.screenGlass);
     const hingeMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1, 18), materials.hinge);
-    const leftHingeCapMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 1, 28), materials.hinge);
-    const rightHingeCapMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 1, 28), materials.hinge);
     const rimMesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), materials.hinge);
-    const lidSheenMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), materials.glow);
-    const webcamRingMesh = new THREE.Mesh(new THREE.CircleGeometry(0.028, 36), materials.cameraLens);
-    const webcamGlassMesh = new THREE.Mesh(new THREE.CircleGeometry(0.016, 36), materials.cameraGlass);
-    const webcamSensorMesh = new THREE.Mesh(new THREE.CircleGeometry(0.008, 24), materials.cameraSensor);
-    const deckDetailsGroup = new THREE.Group();
     const resizeObserver = new ResizeObserver(() => resize());
     let layout = calculateLayout(window.innerWidth, window.innerHeight);
     let animationFrameId = 0;
@@ -457,84 +217,40 @@ export default function LaptopExperience() {
     fillLight.position.set(-3, 2, 2);
     scene.add(fillLight);
 
-    const rimLight = new THREE.DirectionalLight(0xd0e3ff, 2.1);
-    rimLight.position.set(-2.8, 2.7, -3.4);
-    scene.add(rimLight);
-
-    const glossLight = new THREE.PointLight(0xffffff, 8, 7);
-    glossLight.position.set(1.4, 1.5, 2.4);
-    scene.add(glossLight);
-
     laptopGroup.rotation.y = -0.24;
     laptopGroup.rotation.x = -0.04;
     laptopGroup.position.y = -0.52;
     scene.add(laptopGroup);
 
     laptopGroup.add(baseMesh);
-    laptopGroup.add(deckDetailsGroup);
     laptopGroup.add(hingeMesh);
-    laptopGroup.add(leftHingeCapMesh);
-    laptopGroup.add(rightHingeCapMesh);
     laptopGroup.add(lidPivot);
 
     lidPivot.add(lidMesh);
     lidPivot.add(glassMesh);
     lidPivot.add(rimMesh);
-    lidPivot.add(lidSheenMesh);
-    lidPivot.add(webcamRingMesh);
-    lidPivot.add(webcamGlassMesh);
-    lidPivot.add(webcamSensorMesh);
 
     function applyLayout(nextLayout: LaptopLayout) {
       layout = nextLayout;
 
-      setHorizontalRoundedSlabGeometry(
-        baseMesh,
-        layout.baseWidth,
-        layout.baseDepth,
-        layout.baseThickness,
-        0.14,
-        0.025,
-      );
+      setBoxGeometry(baseMesh, layout.baseWidth, layout.baseThickness, layout.baseDepth);
       baseMesh.position.set(0, 0, 0);
 
       hingeMesh.geometry.dispose();
-      hingeMesh.geometry = new THREE.CylinderGeometry(0.046, 0.046, layout.baseWidth * 0.56, 32);
+      hingeMesh.geometry = new THREE.CylinderGeometry(0.045, 0.045, layout.baseWidth * 0.94, 18);
       hingeMesh.rotation.z = Math.PI / 2;
       hingeMesh.position.set(0, layout.baseThickness * 0.72, -layout.baseDepth / 2 + 0.08);
 
-      [leftHingeCapMesh, rightHingeCapMesh].forEach((hingeCap, index) => {
-        hingeCap.geometry.dispose();
-        hingeCap.geometry = new THREE.CylinderGeometry(0.048, 0.048, layout.baseWidth * 0.12, 32);
-        hingeCap.rotation.z = Math.PI / 2;
-        hingeCap.position.set(
-          (index === 0 ? -1 : 1) * layout.baseWidth * 0.33,
-          layout.baseThickness * 0.72,
-          -layout.baseDepth / 2 + 0.08,
-        );
-      });
-
       lidPivot.position.set(0, layout.baseThickness * 0.75, -layout.baseDepth / 2 + 0.08);
 
-      setRoundedSlabGeometry(lidMesh, layout.lidWidth, layout.lidHeight, 0.12, 0.12, 0.022);
+      setBoxGeometry(lidMesh, layout.lidWidth, layout.lidHeight, 0.12);
       lidMesh.position.set(0, layout.lidHeight / 2, 0);
 
       setPlaneGeometry(glassMesh, layout.screenWidth, layout.screenHeight);
       glassMesh.position.set(0, layout.bezel + layout.screenHeight / 2, 0.064);
 
-      setRoundedSlabGeometry(rimMesh, layout.lidWidth * 0.92, 0.035, 0.145, 0.02, 0.006);
+      setBoxGeometry(rimMesh, layout.lidWidth, 0.04, 0.14);
       rimMesh.position.set(0, layout.lidHeight + 0.01, 0.012);
-
-      setPlaneGeometry(lidSheenMesh, layout.lidWidth * 0.42, layout.lidHeight * 0.09);
-      lidSheenMesh.position.set(layout.lidWidth * 0.16, layout.lidHeight * 0.84, 0.087);
-      lidSheenMesh.rotation.z = -0.06;
-
-      const webcamY = layout.bezel + layout.screenHeight + layout.bezel * 0.5;
-      webcamRingMesh.position.set(0, webcamY, 0.091);
-      webcamGlassMesh.position.set(0, webcamY, 0.093);
-      webcamSensorMesh.position.set(0.052, webcamY, 0.094);
-
-      addDeckDetails(deckDetailsGroup, materials, layout);
     }
 
     function resize() {
@@ -632,18 +348,21 @@ export default function LaptopExperience() {
         projectScreenCorner(-halfScreenWidth, -halfScreenHeight),
       ];
       const screenTransform = createProjectiveCssMatrix(screenQuad, stageWidth, stageHeight);
+      const interactive = progress > 0.985;
+
       screenElement.style.left = "0px";
       screenElement.style.top = "0px";
       screenElement.style.width = `${stageWidth}px`;
       screenElement.style.height = `${stageHeight}px`;
       screenElement.style.transform = screenTransform ?? "translate3d(-9999px, 0, 0)";
       screenElement.style.visibility = screenFacingCamera && screenTransform ? "visible" : "hidden";
+      screenElement.style.pointerEvents = interactive && screenFacingCamera ? "auto" : "none";
       screenElement.dataset.scrollProgress = progress.toFixed(3);
       screenElement.dataset.screenQuad = screenQuad
         .map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`)
         .join(" ");
       screenElement.dataset.frontFacing = screenFacingCamera ? "true" : "false";
-      screenElement.dataset.interactive = "true";
+      screenElement.dataset.interactive = interactive && screenFacingCamera ? "true" : "false";
       screenElement.dataset.fullscreen = progress > 0.94 ? "true" : "false";
 
       renderer.render(scene, camera);
@@ -669,20 +388,7 @@ export default function LaptopExperience() {
       window.cancelAnimationFrame(animationFrameId);
       renderer.dispose();
 
-      disposeMeshGeometry(deckDetailsGroup);
-      [
-        baseMesh,
-        lidMesh,
-        glassMesh,
-        hingeMesh,
-        leftHingeCapMesh,
-        rightHingeCapMesh,
-        rimMesh,
-        lidSheenMesh,
-        webcamRingMesh,
-        webcamGlassMesh,
-        webcamSensorMesh,
-      ].forEach((mesh) => mesh.geometry.dispose());
+      [baseMesh, lidMesh, glassMesh, hingeMesh, rimMesh].forEach((mesh) => mesh.geometry.dispose());
       Object.values(materials).forEach((material) => material.dispose());
     };
   }, []);
@@ -693,7 +399,7 @@ export default function LaptopExperience() {
         <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
         <div
           className={styles.screenSurface}
-          data-interactive="true"
+          data-interactive="false"
           ref={screenHostRef}
         >
           <ScreenOS />
