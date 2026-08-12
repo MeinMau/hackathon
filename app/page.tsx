@@ -1,6 +1,7 @@
 import Image from "next/image";
 import AnimatedNumberCountdown from "../components/Countdown/AnimatedNumberCountdown";
 import LaptopExperience from "../components/LaptopExperience";
+import RegistrationForm from "../components/RegistrationForm/RegistrationForm";
 import { MarqueeLogoScroller } from "../components/ui/marquee-logo-scroller";
 import clicksPhoto from "../public/clicksphoto.png";
 import ingeniaLogo from "../public/ingenia-logo.png";
@@ -12,42 +13,62 @@ const countdownEndDate = "2026-09-03T08:00:00-06:00";
 
 const sponsorLogos = [
   {
-    src: "/sponsors/transparent/blu-transparent.png",
+    src: "/sponsors/1.png",
+    alt: "Ingenia",
+    gradient: { from: "#D0E3FF", via: "#7096D1", to: "#334EAC" },
+  },
+  {
+    src: "/sponsors/2.png",
+    alt: "Formacion Integral",
+    gradient: { from: "#F7F2EB", via: "#BAD6EB", to: "#7096D1" },
+  },
+  {
+    src: "/sponsors/3.png",
+    alt: "FESAL",
+    gradient: { from: "#F7F2EB", via: "#D8CEC3", to: "#8C857C" },
+  },
+  {
+    src: "/sponsors/4.png",
+    alt: "ISND",
+    gradient: { from: "#D0E3FF", via: "#7096D1", to: "#334EAC" },
+  },
+  {
+    src: "/sponsors/6.png",
+    alt: "La Marquesita",
+    gradient: { from: "#FFDA8A", via: "#EA9E32", to: "#8F5A12" },
+  },
+  {
+    src: "/sponsors/7.png",
+    alt: "Sunshine",
+    gradient: { from: "#FFE8F3", via: "#FF8FD0", to: "#D14EA2" },
+  },
+  {
+    src: "/sponsors/blu.png",
     alt: "Blu",
     gradient: { from: "#668CFF", via: "#0049FF", to: "#003199" },
   },
   {
-    src: "/sponsors/transparent/fesal-transparent.png",
-    alt: "Fesal",
-    gradient: { from: "#F7F2EB", via: "#BAD6EB", to: "#7096D1" },
+    src: "/sponsors/fesal_negro.png",
+    alt: "FESAL negro",
+    gradient: { from: "#F7F2EB", via: "#D8CEC3", to: "#8C857C" },
   },
   {
-    src: "/sponsors/transparent/isnd-recursos-transparent.png",
-    alt: "ISND Recursos",
-    gradient: { from: "#D0E3FF", via: "#7096D1", to: "#334EAC" },
+    src: "/sponsors/jetbrains.svg",
+    alt: "JetBrains",
+    gradient: { from: "#FF5A5F", via: "#7B2CFF", to: "#081F5C" },
   },
   {
-    src: "/sponsors/transparent/sunshine-transparent.png",
-    alt: "Sunshine",
-    gradient: { from: "#FFE766", via: "#FFCE00", to: "#B38F00" },
-  },
-  {
-    src: "/sponsors/transparent/lunar-transparent.png",
+    src: "/sponsors/LUNAR.png",
     alt: "Lunar",
-    gradient: { from: "#C4C2FF", via: "#9896FF", to: "#5B4DCC" },
+    gradient: { from: "#E8E1FF", via: "#BFA8FF", to: "#7C6BD6" },
   },
   {
-    src: "/sponsors/transparent/marquesitas-transparent.png",
-    alt: "Marquesitas",
-    gradient: { from: "#FFB066", via: "#EA7600", to: "#8F4400" },
-  },
-  {
-    src: "/sponsors/transparent/pokeburrito-transparent.png",
+    src: "/sponsors/POKEBURRITO_page-0001.jpg",
     alt: "Pokeburrito",
     gradient: { from: "#77F28B", via: "#1ED760", to: "#107A36" },
   },
   {
-    src: "/sponsors/transparent/veintitres-transparent.png",
+    src: "/sponsors/veintitres.jpeg",
     alt: "Veintitres",
     gradient: { from: "#67F0D1", via: "#2AE5B9", to: "#1B8F72" },
   },
@@ -68,7 +89,7 @@ export default function Home() {
           <a href="#brief">Plans</a>
           <a href="#terminal">Terminal</a>
         </nav>
-        <a className={styles.navAction} href="https://forms.gle/XsfQJUWYxTgDEEDWA" target="_blank">
+        <a className={styles.navAction} href="#registro">
           Inscribete
         </a>
       </header>
@@ -110,7 +131,7 @@ export default function Home() {
 
       <MarqueeLogoScroller
         className={styles.sponsors}
-        title="Sponsors"
+        title="Partners"
         description="Aliados que impulsan el hackathon, conectan talento joven con la industria y hacen posible una experiencia de alto impacto."
         logos={sponsorLogos}
         speed="normal"
@@ -152,6 +173,26 @@ export default function Home() {
           </p>
         </article>
       </section>
+
+      <section id="registro" className={styles.registrationSection} aria-labelledby="registro-title">
+        <div className={styles.registrationIntro}>
+          <span className={styles.monoLabel}>REGISTRO</span>
+          <h2 id="registro-title">Reserva tu lugar en el hackathon</h2>
+          <p>
+            Completa tus datos para participar en el Primer Concurso de Programacion
+            ISND - INGENIA. Los campos marcados como obligatorios nos ayudan a validar
+            tu registro y categoria.
+          </p>
+          <div className={styles.registrationStats} aria-label="Resumen del evento">
+            <span>3 y 4 de septiembre</span>
+            <span>Preparatoria y Universidad</span>
+            <span>IEST Anahuac</span>
+          </div>
+        </div>
+
+        <RegistrationForm />
+      </section>
+
       <FAQ />
       <LaptopExperience />
     </main>
