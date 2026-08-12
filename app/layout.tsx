@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Hackathon ISND",
-  description: "AI for Business hackathon landing page",
+  description: "Fortalece pensamiento lógico, resolución de problemas y trabajo colaborativo a través del código.",
   icons: {
     icon: "/favicon.png?v=2",
     shortcut: "/favicon.png?v=2",
