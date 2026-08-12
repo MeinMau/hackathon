@@ -3,9 +3,7 @@
   height: 298vh;
   min-height: 2240px;
   margin-top: 0;
-  background:
-    radial-gradient(circle at 50% 34%, rgba(208, 227, 255, 0.2), transparent 34%),
-    linear-gradient(180deg, #081f5c 0%, #06113d 100%);
+  background: var(--color-warm-canvas);
 }
 
 .stickyScene {
@@ -15,9 +13,7 @@
   height: 100vh;
   min-height: 620px;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 48%, rgba(112, 150, 209, 0.34), transparent 40%),
-    linear-gradient(180deg, #0b2363 0%, #06113d 58%, #03071d 100%);
+  background: var(--color-warm-canvas);
   isolation: isolate;
 }
 
@@ -29,11 +25,11 @@
   min-height: 220px;
   content: "";
   background:
-    linear-gradient(180deg, transparent, rgba(3, 7, 29, 0.96)),
+    linear-gradient(180deg, transparent, rgba(186, 214, 235, 0.92)),
     repeating-linear-gradient(
       90deg,
-      rgba(208, 227, 255, 0.08) 0,
-      rgba(208, 227, 255, 0.08) 1px,
+      rgba(8, 31, 92, 0.08) 0,
+      rgba(8, 31, 92, 0.08) 1px,
       transparent 1px,
       transparent 84px
     );
