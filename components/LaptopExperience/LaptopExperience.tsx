@@ -632,21 +632,18 @@ export default function LaptopExperience() {
         projectScreenCorner(-halfScreenWidth, -halfScreenHeight),
       ];
       const screenTransform = createProjectiveCssMatrix(screenQuad, stageWidth, stageHeight);
-      const interactive = progress > 0.985;
-
       screenElement.style.left = "0px";
       screenElement.style.top = "0px";
       screenElement.style.width = `${stageWidth}px`;
       screenElement.style.height = `${stageHeight}px`;
       screenElement.style.transform = screenTransform ?? "translate3d(-9999px, 0, 0)";
       screenElement.style.visibility = screenFacingCamera && screenTransform ? "visible" : "hidden";
-      screenElement.style.pointerEvents = interactive && screenFacingCamera ? "auto" : "none";
       screenElement.dataset.scrollProgress = progress.toFixed(3);
       screenElement.dataset.screenQuad = screenQuad
         .map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`)
         .join(" ");
       screenElement.dataset.frontFacing = screenFacingCamera ? "true" : "false";
-      screenElement.dataset.interactive = interactive && screenFacingCamera ? "true" : "false";
+      screenElement.dataset.interactive = "true";
       screenElement.dataset.fullscreen = progress > 0.94 ? "true" : "false";
 
       renderer.render(scene, camera);
@@ -696,7 +693,7 @@ export default function LaptopExperience() {
         <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
         <div
           className={styles.screenSurface}
-          data-interactive="false"
+          data-interactive="true"
           ref={screenHostRef}
         >
           <ScreenOS />
