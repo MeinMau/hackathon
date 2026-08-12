@@ -1,11 +1,11 @@
 .section {
   position: relative;
-  height: 430vh;
-  min-height: 3200px;
-  margin-top: 32px;
+  height: 298vh;
+  min-height: 2240px;
+  margin-top: 0;
   background:
-    radial-gradient(circle at 50% 34%, rgba(208, 227, 255, 0.26), transparent 34%),
-    linear-gradient(180deg, var(--color-warm-canvas) 0%, #081f5c 18%, #06113d 100%);
+    radial-gradient(circle at 50% 34%, rgba(208, 227, 255, 0.2), transparent 34%),
+    linear-gradient(180deg, #081f5c 0%, #06113d 100%);
 }
 
 .stickyScene {
@@ -55,11 +55,14 @@
 
 .screenSurface {
   position: absolute;
+  top: 0;
+  left: 0;
   z-index: 2;
   overflow: hidden;
   border-radius: 0;
   background: #06113d;
   pointer-events: none;
+  transform-origin: 0 0;
   transform-style: preserve-3d;
   backface-visibility: hidden;
   will-change: transform, width, height, left, top;
@@ -82,7 +85,7 @@
 
 @media (max-width: 920px) {
   .section {
-    min-height: 2800px;
+    min-height: 1900px;
   }
 
   .stickyScene {

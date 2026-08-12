@@ -23,6 +23,89 @@ type LaptopLayout = {
   bezel: number;
 };
 
+type Point2D = {
+  x: number;
+  y: number;
+};
+
+type ScreenQuad = [Point2D, Point2D, Point2D, Point2D];
+
+function formatCssNumber(value: number) {
+  return Number.isFinite(value) ? value.toFixed(6) : "0";
+}
+
+function projectWorldPoint(
+  point: THREE.Vector3,
+  camera: THREE.Camera,
+  width: number,
+  height: number,
+): Point2D {
+  const projectedPoint = point.clone().project(camera);
+
+  return {
+    x: (projectedPoint.x + 1) * 0.5 * width,
+    y: (1 - projectedPoint.y) * 0.5 * height,
+  };
+}
+
+function createProjectiveCssMatrix(
+  [topLeft, topRight, bottomRight, bottomLeft]: ScreenQuad,
+  sourceWidth: number,
+  sourceHeight: number,
+) {
+  if (sourceWidth <= 0 || sourceHeight <= 0) {
+    return null;
+  }
+
+  const dx1 = topRight.x - bottomRight.x;
+  const dy1 = topRight.y - bottomRight.y;
+  const dx2 = bottomLeft.x - bottomRight.x;
+  const dy2 = bottomLeft.y - bottomRight.y;
+  const sx = topLeft.x - topRight.x + bottomRight.x - bottomLeft.x;
+  const sy = topLeft.y - topRight.y + bottomRight.y - bottomLeft.y;
+  const denominator = dx1 * dy2 - dx2 * dy1;
+
+  let perspectiveX = 0;
+  let perspectiveY = 0;
+
+  if (Math.abs(sx) > 0.000001 || Math.abs(sy) > 0.000001) {
+    if (Math.abs(denominator) < 0.000001) {
+      return null;
+    }
+
+    perspectiveX = (sx * dy2 - dx2 * sy) / denominator;
+    perspectiveY = (dx1 * sy - sx * dy1) / denominator;
+  }
+
+  const scaleX = topRight.x - topLeft.x + perspectiveX * topRight.x;
+  const skewX = bottomLeft.x - topLeft.x + perspectiveY * bottomLeft.x;
+  const translateX = topLeft.x;
+  const skewY = topRight.y - topLeft.y + perspectiveX * topRight.y;
+  const scaleY = bottomLeft.y - topLeft.y + perspectiveY * bottomLeft.y;
+  const translateY = topLeft.y;
+
+  const matrix = [
+    scaleX / sourceWidth,
+    skewY / sourceWidth,
+    0,
+    perspectiveX / sourceWidth,
+    skewX / sourceHeight,
+    scaleY / sourceHeight,
+    0,
+    perspectiveY / sourceHeight,
+    0,
+    0,
+    1,
+    0,
+    translateX,
+    translateY,
+    0,
+    1,
+  ];
+
+  return `matrix3d(${matrix.map(formatCssNumber).join(",")})`;
+}
+
 function createLaptopMaterials() {
   return {
     base: new THREE.MeshStandardMaterial({
@@ -245,33 +328,41 @@ export default function LaptopExperience() {
       const target = targetStart.lerp(screenCenter, zoom);
       camera.up.set(0, 1, 0).lerp(screenUp, zoom).normalize();
       camera.lookAt(target);
+      camera.updateMatrixWorld(true);
 
+      const screenFacingCamera = camera.position
+        .clone()
+        .sub(screenCenter)
+        .normalize()
+        .dot(screenNormal) > 0.02;
       const stageWidth = stageElement.clientWidth;
       const stageHeight = stageElement.clientHeight;
-      const screenAspect = stageWidth / Math.max(stageHeight, 1);
-      const closedWidth = Math.min(stageWidth * 0.48, 700);
-      const openWidth = Math.min(stageWidth * 0.62, 900);
-      const zoomWidth = lerp(openWidth, stageWidth, zoom);
-      const surfaceWidth = lerp(lerp(closedWidth, openWidth, opening), zoomWidth, zoom);
-      const surfaceHeight = lerp(surfaceWidth / screenAspect, stageHeight, fullscreen);
-      const surfaceLeft = lerp(stageWidth * 0.49, stageWidth * 0.5, zoom);
-      const surfaceTop = lerp(
-        lerp(stageHeight * 0.62, stageHeight * 0.47, opening),
-        stageHeight * 0.5,
-        zoom,
-      );
-      const rotateX = lerp(78, 0, opening);
-      const rotateY = lerp(-10, 0, zoom);
-      const rotateZ = lerp(-2, 0, zoom);
-      const perspective = lerp(980, 2200, zoom);
+      const halfScreenWidth = layout.screenWidth / 2;
+      const halfScreenHeight = layout.screenHeight / 2;
+      const projectScreenCorner = (x: number, y: number) =>
+        projectWorldPoint(glassMesh.localToWorld(new THREE.Vector3(x, y, 0)), camera, stageWidth, stageHeight);
+      const screenQuad: ScreenQuad = [
+        projectScreenCorner(-halfScreenWidth, halfScreenHeight),
+        projectScreenCorner(halfScreenWidth, halfScreenHeight),
+        projectScreenCorner(halfScreenWidth, -halfScreenHeight),
+        projectScreenCorner(-halfScreenWidth, -halfScreenHeight),
+      ];
+      const screenTransform = createProjectiveCssMatrix(screenQuad, stageWidth, stageHeight);
       const interactive = progress > 0.985;
-      screenElement.style.left = `${surfaceLeft}px`;
-      screenElement.style.top = `${surfaceTop}px`;
-      screenElement.style.width = `${surfaceWidth}px`;
-      screenElement.style.height = `${surfaceHeight}px`;
-      screenElement.style.transform = `translate3d(-50%, -50%, 0) perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`;
-      screenElement.style.pointerEvents = interactive ? "auto" : "none";
-      screenElement.dataset.interactive = interactive ? "true" : "false";
+
+      screenElement.style.left = "0px";
+      screenElement.style.top = "0px";
+      screenElement.style.width = `${stageWidth}px`;
+      screenElement.style.height = `${stageHeight}px`;
+      screenElement.style.transform = screenTransform ?? "translate3d(-9999px, 0, 0)";
+      screenElement.style.visibility = screenFacingCamera && screenTransform ? "visible" : "hidden";
+      screenElement.style.pointerEvents = interactive && screenFacingCamera ? "auto" : "none";
+      screenElement.dataset.scrollProgress = progress.toFixed(3);
+      screenElement.dataset.screenQuad = screenQuad
+        .map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`)
+        .join(" ");
+      screenElement.dataset.frontFacing = screenFacingCamera ? "true" : "false";
+      screenElement.dataset.interactive = interactive && screenFacingCamera ? "true" : "false";
       screenElement.dataset.fullscreen = progress > 0.94 ? "true" : "false";
 
       renderer.render(scene, camera);
