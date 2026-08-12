@@ -223,6 +223,7 @@
 
 .sponsors,
 .cardGrid,
+.registrationSection,
 .terminalShowroom {
   width: min(1200px, calc(100% - 72px));
   margin: 0 auto 80px;
@@ -280,6 +281,297 @@
   color: var(--color-smoke);
 }
 
+.registrationSection {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(420px, 1.22fr);
+  gap: 32px;
+  overflow: hidden;
+  border-radius: 32px;
+  border: 1px solid rgba(208, 227, 255, 0.28);
+  background:
+    linear-gradient(135deg, rgba(8, 31, 92, 0.98), rgba(8, 31, 92, 0.88) 48%, rgba(51, 78, 172, 0.92)),
+    var(--color-galaxy);
+  padding: 30px;
+  color: var(--color-paper-white);
+}
+
+.registrationSection::before,
+.registrationSection::after {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  pointer-events: none;
+}
+
+.registrationSection::before {
+  inset: -18% auto auto -8%;
+  width: 54%;
+  height: 72%;
+  background:
+    linear-gradient(135deg, rgba(247, 242, 235, 0.22), transparent 62%),
+    repeating-linear-gradient(135deg, rgba(208, 227, 255, 0.14) 0 2px, transparent 2px 18px);
+  transform: rotate(-8deg);
+}
+
+.registrationSection::after {
+  right: -12%;
+  bottom: -18%;
+  width: 58%;
+  height: 52%;
+  background: linear-gradient(135deg, rgba(186, 214, 235, 0.4), rgba(247, 242, 235, 0.18));
+  clip-path: polygon(18% 0, 100% 12%, 76% 100%, 0 82%);
+}
+
+.registrationIntro {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 12px 4px 12px 8px;
+}
+
+.registrationIntro .monoLabel {
+  background: var(--color-sky);
+  color: var(--color-galaxy);
+}
+
+.registrationIntro h2 {
+  max-width: 440px;
+  margin: 0;
+  font-size: clamp(38px, 5vw, 68px);
+  font-weight: 800;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.registrationIntro p {
+  max-width: 420px;
+  margin: 0;
+  color: var(--color-sky);
+  font-size: 16px;
+  font-weight: 560;
+  line-height: 1.25;
+}
+
+.registrationStats {
+  display: grid;
+  width: 100%;
+  gap: 10px;
+}
+
+.registrationStats span {
+  width: fit-content;
+  border: 1px solid rgba(208, 227, 255, 0.3);
+  border-radius: 9px;
+  background: rgba(255, 249, 240, 0.08);
+  padding: 10px 12px;
+  color: var(--color-meteor);
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.registrationForm {
+  display: grid;
+  gap: 20px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 249, 240, 0.2);
+  background: rgba(255, 249, 240, 0.94);
+  padding: 24px;
+  color: var(--color-galaxy);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.22);
+}
+
+.formHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(8, 31, 92, 0.16);
+  padding-bottom: 16px;
+}
+
+.formHeader span {
+  font-size: 22px;
+  font-weight: 820;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.formHeader strong {
+  color: var(--color-slate);
+  font-size: 12px;
+  font-weight: 780;
+}
+
+.formGrid,
+.optionalFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.optionalFields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.formField {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.honeypotField {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.hiddenSubmitFrame {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.formField span {
+  color: var(--color-galaxy);
+  font-size: 13px;
+  font-weight: 780;
+  line-height: 1.1;
+}
+
+.formField input,
+.formField select,
+.formField textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(8, 31, 92, 0.18);
+  border-radius: 9px;
+  background: rgba(208, 227, 255, 0.42);
+  color: var(--color-galaxy);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.formField input,
+.formField select {
+  height: 46px;
+  padding: 0 13px;
+}
+
+.formField textarea {
+  min-height: 88px;
+  resize: vertical;
+  padding: 12px 13px;
+  line-height: 1.25;
+}
+
+.formField input::placeholder,
+.formField textarea::placeholder {
+  color: rgba(8, 31, 92, 0.48);
+}
+
+.formField input:focus,
+.formField select:focus,
+.formField textarea:focus {
+  border-color: var(--color-planetary);
+  background: var(--color-paper-white);
+  box-shadow: 0 0 0 3px rgba(112, 150, 209, 0.28);
+}
+
+.checkboxField {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid rgba(8, 31, 92, 0.14);
+  border-radius: 12px;
+  background: rgba(208, 227, 255, 0.34);
+  padding: 14px;
+  color: var(--color-slate);
+  font-size: 13px;
+  font-weight: 680;
+  line-height: 1.28;
+}
+
+.checkboxField input {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: var(--color-galaxy);
+}
+
+.formStatus {
+  min-height: 0;
+}
+
+.formSuccess,
+.formError {
+  margin: 0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 720;
+  line-height: 1.28;
+}
+
+.formSuccess {
+  background: rgba(51, 78, 172, 0.12);
+  color: var(--color-galaxy);
+}
+
+.formError {
+  background: rgba(172, 51, 51, 0.12);
+  color: #7b1d1d;
+}
+
+.submitButton {
+  min-height: 50px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--color-galaxy);
+  color: var(--color-paper-white);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 820;
+  transition:
+    background 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.submitButton:hover {
+  background: var(--color-planetary);
+  box-shadow: 0 12px 28px rgba(8, 31, 92, 0.22);
+  transform: translateY(-1px);
+}
+
+.submitButton:disabled {
+  cursor: wait;
+  opacity: 0.72;
+  transform: none;
+}
+
+.submitButton:focus-visible {
+  outline: 3px solid rgba(112, 150, 209, 0.46);
+  outline-offset: 3px;
+}
+
 .terminalShowroom {
   display: grid;
   grid-template-columns: minmax(260px, 0.8fr) minmax(340px, 1.2fr);
@@ -325,6 +617,7 @@
 
 @media (max-width: 920px) {
   .hero,
+  .registrationSection,
   .terminalShowroom {
     grid-template-columns: 1fr;
   }
@@ -348,6 +641,14 @@
   .cardGrid {
     grid-template-columns: 1fr;
   }
+
+  .registrationIntro {
+    min-height: auto;
+  }
+
+  .optionalFields {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -368,6 +669,7 @@
   .hero,
   .sponsors,
   .cardGrid,
+  .registrationSection,
   .terminalShowroom {
     width: min(100% - 24px, 1200px);
     margin-bottom: 48px;
@@ -389,6 +691,34 @@
   .heroCountdown {
     min-height: 320px;
     padding: 28px 16px;
+  }
+
+  .registrationSection {
+    border-radius: 24px;
+    padding: 16px;
+  }
+
+  .registrationIntro {
+    gap: 20px;
+    padding: 6px 2px;
+  }
+
+  .registrationIntro h2 {
+    font-size: clamp(34px, 12vw, 48px);
+  }
+
+  .registrationForm {
+    border-radius: 18px;
+    padding: 16px;
+  }
+
+  .formHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
   }
 
   .heroCountdown::before,
