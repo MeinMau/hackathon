@@ -6,6 +6,7 @@ import clicksPhoto from "../public/clicksphoto.png";
 import ingeniaLogo from "../public/ingenia-logo.png";
 import serpentinas from "../public/serpentinas.png";
 import styles from "./page.module.css";
+import FAQ from "@/components/FAQ";
 
 const countdownEndDate = "2026-09-03T08:00:00-06:00";
 
@@ -139,8 +140,8 @@ export default function Home() {
           </p>
         </article>
 
-        <article className={styles.invertedCard}>
-          <span className={styles.yellowMark}>03 / CONNECT</span>
+        <article className={styles.card}>
+          <span className={styles.mintTag}>03 / CONNECT</span>
           <h2>Connect & Elevate</h2>
           <p>
             Más que una competencia, esta es tu plataforma de despegue dentro del
@@ -151,7 +152,7 @@ export default function Home() {
           </p>
         </article>
       </section>
-
+      <FAQ />
       <LaptopExperience />
     </main>
   );
