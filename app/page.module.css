@@ -432,15 +432,6 @@
   overflow: hidden;
 }
 
-.hiddenSubmitFrame {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  border: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
 .formField span {
   color: var(--color-galaxy);
   font-size: 13px;
@@ -513,6 +504,17 @@
   height: 18px;
   margin: 1px 0 0;
   accent-color: var(--color-galaxy);
+}
+
+.turnstileField {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.turnstileField iframe {
+  max-width: 100%;
 }
 
 .formStatus {
