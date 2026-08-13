@@ -3,10 +3,16 @@ const appsScriptUrl =
 const appsScriptTimeoutMs = 20000;
 const maxRequestBytes = 32_000;
 const expectedSource = "hackathon-registration";
+const expectedVersion = "turnstile-email-otp-v2";
+const versionCheckTtlMs = 5 * 60 * 1000;
+let versionVerifiedAt = 0;
 const forwardedFields = [
+  "action",
   "source",
   "website",
   "submissionId",
+  "verificationId",
+  "verificationCode",
   "nombreCompleto",
   "telefono",
   "correoElectronico",
@@ -32,6 +38,12 @@ type AppsScriptResponse = {
   source?: string;
   version?: string;
   submissionId?: string;
+  verificationRequired?: boolean;
+  verificationId?: string;
+  maskedEmail?: string;
+  expiresInSeconds?: number;
+  attemptsRemaining?: number;
+  emailVerified?: boolean;
 };
 
 function jsonResponse(payload: AppsScriptResponse, status = 200) {
@@ -39,6 +51,30 @@ function jsonResponse(payload: AppsScriptResponse, status = 200) {
     status,
     headers: { "Cache-Control": "no-store" },
   });
+}
+
+async function verifyAppsScriptVersion() {
+  if (Date.now() - versionVerifiedAt < versionCheckTtlMs) {
+    return { ok: true };
+  }
+
+  try {
+    const response = await fetch(appsScriptUrl as string, {
+      cache: "no-store",
+      redirect: "follow",
+      signal: AbortSignal.timeout(appsScriptTimeoutMs),
+    });
+    const payload = (await response.json()) as AppsScriptResponse;
+
+    if (!response.ok || payload.version !== expectedVersion) {
+      return { ok: false, error: "apps_script_version_mismatch" };
+    }
+
+    versionVerifiedAt = Date.now();
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "apps_script_unreachable" };
+  }
 }
 
 export async function POST(request: Request) {
@@ -68,11 +104,20 @@ export async function POST(request: Request) {
   }
 
   const submissionId = body.get("submissionId") || "";
-  if (!submissionId) {
+  const action = body.get("action") || "";
+  if (
+    !submissionId ||
+    !["request_email_code", "confirm_email_code"].includes(action)
+  ) {
     return jsonResponse({ ok: false, error: "invalid_request" }, 400);
   }
 
   body.set("responseMode", "json");
+
+  const versionCheck = await verifyAppsScriptVersion();
+  if (!versionCheck.ok) {
+    return jsonResponse({ ok: false, error: versionCheck.error }, 503);
+  }
 
   try {
     const response = await fetch(appsScriptUrl, {

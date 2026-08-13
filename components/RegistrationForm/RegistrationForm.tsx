@@ -10,6 +10,7 @@ const registrationEndpoint = "/api/register";
 const requestTimeoutMs = 20000;
 
 type SubmitState = "idle" | "submitting" | "success" | "error" | "not-configured";
+type FormStep = "details" | "verification";
 
 type RegistrationResponse = {
   source?: string;
@@ -20,6 +21,12 @@ type RegistrationResponse = {
   field?: string;
   fields?: string[];
   retryAfterSeconds?: number;
+  verificationRequired?: boolean;
+  verificationId?: string;
+  maskedEmail?: string;
+  expiresInSeconds?: number;
+  attemptsRemaining?: number;
+  emailVerified?: boolean;
 };
 
 declare global {
@@ -71,10 +78,26 @@ function getResponseMessage(response: RegistrationResponse) {
       const minutes = Math.max(1, Math.ceil((response.retryAfterSeconds ?? 600) / 60));
       return `Detectamos demasiados intentos. Espera ${minutes} min e intenta de nuevo.`;
     }
+    case "code_recently_sent":
+      return "Ya enviamos un codigo. Espera un minuto antes de solicitar otro.";
     case "captcha_failed":
       return "No pudimos validar que eres una persona. Recarga la verificacion e intenta de nuevo.";
     case "turnstile_not_configured":
       return "Falta configurar la clave secreta de Turnstile en Google Apps Script.";
+    case "resend_not_configured":
+      return "Falta terminar la configuracion del correo de confirmacion.";
+    case "email_send_failed":
+      return "No pudimos enviar el codigo. Revisa el correo e intenta de nuevo.";
+    case "email_provider_rate_limited":
+      return "El servicio de correo alcanzo su limite temporal. Intenta de nuevo mas tarde.";
+    case "invalid_verification_code":
+      return response.attemptsRemaining === undefined
+        ? "El codigo debe contener seis digitos."
+        : `El codigo no es correcto. Te quedan ${response.attemptsRemaining} intentos.`;
+    case "verification_expired":
+      return "El codigo vencio. Vuelve a tus datos para solicitar uno nuevo.";
+    case "too_many_code_attempts":
+      return "El codigo fue bloqueado por demasiados intentos. Solicita uno nuevo.";
     case "not_configured":
       return "Falta configurar la URL de Google Apps Script en el servidor.";
     case "apps_script_timeout":
@@ -83,9 +106,13 @@ function getResponseMessage(response: RegistrationResponse) {
     case "apps_script_http_error":
     case "invalid_apps_script_response":
       return "No pudimos conectar con el registro. Intenta de nuevo en unos minutos.";
+    case "apps_script_version_mismatch":
+      return "El sistema de confirmacion esta pendiente de publicarse. Intenta de nuevo mas tarde.";
     case "request_too_large":
     case "invalid_request":
-      return "No pudimos procesar los datos del formulario. Recarga la pagina e intenta de nuevo.";
+    case "invalid_action":
+    case "invalid_field_length":
+      return "No pudimos procesar los datos del formulario. Revisa los campos e intenta de nuevo.";
     case "missing_fields":
       return "Faltan campos obligatorios. Revisa tu registro e intenta de nuevo.";
     case "invalid_email":
@@ -99,16 +126,42 @@ function getResponseMessage(response: RegistrationResponse) {
   }
 }
 
+async function postRegistration(formData: FormData) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), requestTimeoutMs);
+
+  try {
+    const response = await fetch(registrationEndpoint, {
+      method: "POST",
+      body: formData,
+      signal: controller.signal,
+    });
+    const payload = (await response.json()) as RegistrationResponse;
+    return { response, payload };
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 export default function RegistrationForm() {
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
+  const [formStep, setFormStep] = useState<FormStep>("details");
   const [statusMessage, setStatusMessage] = useState("");
   const [turnstileScriptReady, setTurnstileScriptReady] = useState(false);
+  const [verificationId, setVerificationId] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [maskedEmail, setMaskedEmail] = useState("");
   const formRef = useRef<HTMLFormElement | null>(null);
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef("");
 
   useEffect(() => {
-    if (!turnstileSiteKey || !turnstileScriptReady || !turnstileContainerRef.current || !window.turnstile) {
+    if (
+      !turnstileSiteKey ||
+      !turnstileScriptReady ||
+      !turnstileContainerRef.current ||
+      !window.turnstile
+    ) {
       return;
     }
 
@@ -132,6 +185,16 @@ export default function RegistrationForm() {
     };
   }, []);
 
+  function returnToDetails() {
+    setFormStep("details");
+    setSubmitState("idle");
+    setStatusMessage("");
+    setVerificationId("");
+    setVerificationCode("");
+    setMaskedEmail("");
+    window.turnstile?.reset(turnstileWidgetIdRef.current);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -142,38 +205,75 @@ export default function RegistrationForm() {
       return;
     }
 
-    const formData = new FormData(form);
-    if (!String(formData.get("cf-turnstile-response") ?? "").trim()) {
-      setSubmitState("error");
-      setStatusMessage("Completa la verificacion de seguridad e intenta de nuevo.");
-      window.turnstile?.reset(turnstileWidgetIdRef.current);
-      return;
+    let formData: FormData;
+
+    if (formStep === "details") {
+      formData = new FormData(form);
+      if (!String(formData.get("cf-turnstile-response") ?? "").trim()) {
+        setSubmitState("error");
+        setStatusMessage("Completa la verificacion de seguridad e intenta de nuevo.");
+        window.turnstile?.reset(turnstileWidgetIdRef.current);
+        return;
+      }
+
+      formData.set("action", "request_email_code");
+    } else {
+      if (!verificationId || !/^\d{6}$/.test(verificationCode)) {
+        setSubmitState("error");
+        setStatusMessage("Ingresa el codigo de seis digitos que enviamos a tu correo.");
+        return;
+      }
+
+      formData = new FormData();
+      formData.set("action", "confirm_email_code");
+      formData.set("verificationId", verificationId);
+      formData.set("verificationCode", verificationCode);
+      formData.set("source", "landing-hackathon");
     }
 
-    const submissionId = createSubmissionId();
-    formData.set("submissionId", submissionId);
+    formData.set("submissionId", createSubmissionId());
     setSubmitState("submitting");
     setStatusMessage("");
 
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), requestTimeoutMs);
-
     try {
-      const response = await fetch(registrationEndpoint, {
-        method: "POST",
-        body: formData,
-        signal: controller.signal,
-      });
-      const payload = (await response.json()) as RegistrationResponse;
+      const { response, payload } = await postRegistration(formData);
 
       if (!response.ok || !payload.ok) {
         setSubmitState("error");
         setStatusMessage(getResponseMessage(payload));
+
+        if (
+          formStep === "verification" &&
+          ["verification_expired", "too_many_code_attempts"].includes(payload.error ?? "")
+        ) {
+          setFormStep("details");
+          setVerificationId("");
+          setVerificationCode("");
+        }
+        return;
+      }
+
+      if (formStep === "details") {
+        if (!payload.verificationRequired || !payload.verificationId) {
+          setSubmitState("error");
+          setStatusMessage("No pudimos iniciar la confirmacion del correo. Intenta de nuevo.");
+          return;
+        }
+
+        setVerificationId(payload.verificationId);
+        setMaskedEmail(payload.maskedEmail ?? "tu correo");
+        setVerificationCode("");
+        setFormStep("verification");
+        setSubmitState("idle");
         return;
       }
 
       setSubmitState("success");
-      setStatusMessage("Registro enviado. Gracias por inscribirte al hackathon.");
+      setStatusMessage("Correo confirmado y registro enviado. Gracias por inscribirte.");
+      setFormStep("details");
+      setVerificationId("");
+      setVerificationCode("");
+      setMaskedEmail("");
       form.reset();
     } catch (error) {
       setSubmitState("error");
@@ -183,7 +283,6 @@ export default function RegistrationForm() {
           : "No pudimos conectar con el registro. Revisa tu conexion e intenta de nuevo.",
       );
     } finally {
-      window.clearTimeout(timeout);
       window.turnstile?.reset(turnstileWidgetIdRef.current);
     }
   }
@@ -199,15 +298,10 @@ export default function RegistrationForm() {
         />
       ) : null}
 
-      <form
-        ref={formRef}
-        className={styles.registrationForm}
-        method="post"
-        onSubmit={handleSubmit}
-      >
+      <form ref={formRef} className={styles.registrationForm} method="post" onSubmit={handleSubmit}>
         <div className={styles.formHeader}>
           <span>Ficha de participante</span>
-          <strong>* Obligatorio</strong>
+          <strong>{formStep === "details" ? "* Obligatorio" : "Paso 2 de 2"}</strong>
         </div>
 
         <label className={styles.honeypotField} aria-hidden="true">
@@ -217,71 +311,152 @@ export default function RegistrationForm() {
 
         <input name="source" type="hidden" value="landing-hackathon" />
 
-        <div className={styles.formGrid}>
-          <label className={styles.formField}>
-            <span>Nombre completo *</span>
-            <input name="nombreCompleto" type="text" placeholder="Tu nombre completo" required />
-          </label>
+        <div className={styles.formDetails} hidden={formStep !== "details"}>
+          <div className={styles.formGrid}>
+            <label className={styles.formField}>
+              <span>Nombre completo *</span>
+              <input
+                name="nombreCompleto"
+                type="text"
+                placeholder="Tu nombre completo"
+                maxLength={120}
+                required
+              />
+            </label>
 
-          <label className={styles.formField}>
-            <span>Numero de telefono *</span>
-            <input name="telefono" type="tel" placeholder="833 000 0000" required />
-          </label>
+            <label className={styles.formField}>
+              <span>Numero de telefono *</span>
+              <input
+                name="telefono"
+                type="tel"
+                placeholder="833 000 0000"
+                maxLength={30}
+                required
+              />
+            </label>
 
-          <label className={styles.formField}>
-            <span>Correo electronico *</span>
-            <input name="correoElectronico" type="email" placeholder="tu@correo.com" required />
-          </label>
+            <label className={styles.formField}>
+              <span>Correo electronico *</span>
+              <input
+                name="correoElectronico"
+                type="email"
+                placeholder="tu@correo.com"
+                maxLength={254}
+                required
+              />
+            </label>
 
-          <label className={styles.formField}>
-            <span>Grado escolar *</span>
-            <select name="gradoEscolar" defaultValue="" required>
-              <option value="" disabled>
-                Selecciona una opcion
-              </option>
-              <option value="preparatoria">Preparatoria</option>
-              <option value="universidad">Universidad</option>
-            </select>
-          </label>
+            <label className={styles.formField}>
+              <span>Grado escolar *</span>
+              <select name="gradoEscolar" defaultValue="" required>
+                <option value="" disabled>
+                  Selecciona una opcion
+                </option>
+                <option value="preparatoria">Preparatoria</option>
+                <option value="universidad">Universidad</option>
+              </select>
+            </label>
 
-          <label className={styles.formField}>
-            <span>Escuela de procedencia *</span>
-            <input name="escuelaProcedencia" type="text" placeholder="Nombre de tu escuela" required />
-          </label>
+            <label className={styles.formField}>
+              <span>Escuela de procedencia *</span>
+              <input
+                name="escuelaProcedencia"
+                type="text"
+                placeholder="Nombre de tu escuela"
+                maxLength={140}
+                required
+              />
+            </label>
 
-          <label className={styles.formField}>
-            <span>Matricula escolar *</span>
-            <input name="matriculaEscolar" type="text" placeholder="Matricula o ID escolar" required />
+            <label className={styles.formField}>
+              <span>Matricula escolar *</span>
+              <input
+                name="matriculaEscolar"
+                type="text"
+                placeholder="Matricula o ID escolar"
+                maxLength={60}
+                required
+              />
+            </label>
+          </div>
+
+          <div className={styles.optionalFields}>
+            <label className={styles.formField}>
+              <span>Tecnologias que usas</span>
+              <textarea
+                name="tecnologias"
+                placeholder="React, Python, Java, Figma..."
+                maxLength={600}
+              />
+            </label>
+
+            <label className={styles.formField}>
+              <span>Hard Skills</span>
+              <textarea
+                name="hardSkills"
+                placeholder="Programacion, bases de datos, UI, analisis..."
+                maxLength={600}
+              />
+            </label>
+
+            <label className={styles.formField}>
+              <span>Soft Skills</span>
+              <textarea
+                name="softSkills"
+                placeholder="Liderazgo, comunicacion, creatividad..."
+                maxLength={600}
+              />
+            </label>
+          </div>
+
+          <label className={styles.checkboxField}>
+            <input name="reglamento" type="checkbox" required />
+            <span>
+              Declaro haber leido y estar de acuerdo con el reglamento establecido en la
+              Convocatoria del Primer Concurso de Programacion ISND - INGENIA.
+            </span>
           </label>
         </div>
 
-        <div className={styles.optionalFields}>
-          <label className={styles.formField}>
-            <span>Tecnologias que usas</span>
-            <textarea name="tecnologias" placeholder="React, Python, Java, Figma..." />
-          </label>
+        {formStep === "verification" ? (
+          <section className={styles.verificationStep} aria-labelledby="verification-title">
+            <div>
+              <h3 id="verification-title">Confirma tu correo</h3>
+              <p>
+                Enviamos un codigo de seis digitos a <strong>{maskedEmail}</strong>. Vence en 10
+                minutos.
+              </p>
+            </div>
 
-          <label className={styles.formField}>
-            <span>Hard Skills</span>
-            <textarea name="hardSkills" placeholder="Programacion, bases de datos, UI, analisis..." />
-          </label>
+            <label className={styles.verificationCodeField}>
+              <span>Codigo de confirmacion</span>
+              <input
+                value={verificationCode}
+                onChange={(event) =>
+                  setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+                name="verificationCode"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                placeholder="000000"
+                autoFocus
+                required
+              />
+            </label>
 
-          <label className={styles.formField}>
-            <span>Soft Skills</span>
-            <textarea name="softSkills" placeholder="Liderazgo, comunicacion, creatividad..." />
-          </label>
-        </div>
-
-        <label className={styles.checkboxField}>
-          <input name="reglamento" type="checkbox" required />
-          <span>
-            Declaro haber leido y estar de acuerdo con el reglamento establecido
-            en la Convocatoria del Primer Concurso de Programacion ISND - INGENIA.
-          </span>
-        </label>
+            <button className={styles.changeEmailButton} type="button" onClick={returnToDetails}>
+              Cambiar datos o solicitar otro codigo
+            </button>
+          </section>
+        ) : null}
 
         {turnstileSiteKey ? (
-          <div className={styles.turnstileField} ref={turnstileContainerRef} />
+          <div hidden={formStep !== "details"}>
+            <div className={styles.turnstileField} ref={turnstileContainerRef} />
+          </div>
         ) : null}
 
         <div className={styles.formStatus} aria-live="polite">
@@ -291,13 +466,7 @@ export default function RegistrationForm() {
             </p>
           ) : null}
 
-          {submitState === "error" ? (
-            <p className={styles.formError} role="alert">
-              {statusMessage}
-            </p>
-          ) : null}
-
-          {submitState === "not-configured" ? (
+          {submitState === "error" || submitState === "not-configured" ? (
             <p className={styles.formError} role="alert">
               {statusMessage}
             </p>
@@ -305,7 +474,13 @@ export default function RegistrationForm() {
         </div>
 
         <button className={styles.submitButton} type="submit" disabled={submitState === "submitting"}>
-          {submitState === "submitting" ? "Enviando..." : "Enviar registro"}
+          {submitState === "submitting"
+            ? formStep === "details"
+              ? "Enviando codigo..."
+              : "Confirmando..."
+            : formStep === "details"
+              ? "Enviar codigo"
+              : "Confirmar correo y enviar"}
         </button>
       </form>
     </>

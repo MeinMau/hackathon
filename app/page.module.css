@@ -414,6 +414,15 @@
   gap: 16px;
 }
 
+.formDetails {
+  display: grid;
+  gap: 20px;
+}
+
+.formDetails[hidden] {
+  display: none;
+}
+
 .optionalFields {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -515,6 +524,80 @@
 
 .turnstileField iframe {
   max-width: 100%;
+}
+
+.verificationStep {
+  display: grid;
+  gap: 18px;
+  border-top: 1px solid rgba(8, 31, 92, 0.16);
+  border-bottom: 1px solid rgba(8, 31, 92, 0.16);
+  padding: 22px 0;
+}
+
+.verificationStep h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.verificationStep p {
+  margin: 0;
+  color: var(--color-slate);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.verificationCodeField {
+  display: grid;
+  max-width: 260px;
+  gap: 8px;
+}
+
+.verificationCodeField span {
+  font-size: 13px;
+  font-weight: 780;
+}
+
+.verificationCodeField input {
+  width: 100%;
+  height: 54px;
+  border: 1px solid rgba(8, 31, 92, 0.24);
+  border-radius: 8px;
+  background: rgba(208, 227, 255, 0.42);
+  color: var(--color-galaxy);
+  font: inherit;
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: 0;
+  outline: none;
+  text-align: center;
+}
+
+.verificationCodeField input:focus {
+  border-color: var(--color-planetary);
+  background: var(--color-paper-white);
+  box-shadow: 0 0 0 3px rgba(112, 150, 209, 0.28);
+}
+
+.changeEmailButton {
+  width: fit-content;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--color-planetary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 760;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.changeEmailButton:focus-visible {
+  border-radius: 4px;
+  outline: 3px solid rgba(112, 150, 209, 0.4);
+  outline-offset: 4px;
 }
 
 .formStatus {
