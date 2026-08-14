@@ -8,6 +8,7 @@ import ingeniaLogo from "../public/ingenia-logo.png";
 import serpentinas from "../public/serpentinas.png";
 import styles from "./page.module.css";
 import FAQ from "@/components/FAQ";
+import SmoothHashNavigation from "@/components/SmoothHashNavigation";
 
 const countdownEndDate = "2026-09-03T08:00:00-06:00";
 
@@ -77,6 +78,7 @@ const sponsorLogos = [
 export default function Home() {
   return (
     <main className={styles.page}>
+      <SmoothHashNavigation />
       <header className={styles.header}>
         <a className={styles.brand} href="#">
           <Image src={ingeniaLogo} alt="Ingenia" priority />

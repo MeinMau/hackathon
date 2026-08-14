@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import styles from "./FAQ.module.css";
 
 const faqItems = [
@@ -34,30 +37,52 @@ const faqItems = [
 ];
 
 export default function FAQ() {
+    const [activeIndex, setActiveIndex] = useState(0);
+
     return (
         <section className={`${styles.container} ${styles.card}`} id="faq" aria-labelledby="faq-title">
             <div className={styles.header}>
-            <p className={styles.mintTag}>04 / FAQ</p>
+                <p className={styles.mintTag}>04 / FAQ</p>
                 <h2 className={styles.title} id="faq-title">
                     Preguntas frecuentes
                 </h2>
-          
             </div>
 
             <div className={styles.list}>
-                {faqItems.map((item, index) => (
-                    <details className={styles.item} key={item.question} open={index === 0}>
-                        <summary className={styles.summary}>
-                            <span>{item.question}</span>
-                            <span className={styles.icon} aria-hidden="true">
-                                +
-                            </span>
-                        </summary>
-                        <div className={styles.answer}>
-                            <p>{item.answer}</p>
-                        </div>
-                    </details>
-                ))}
+                {faqItems.map((item, index) => {
+                    const isOpen = activeIndex === index;
+                    const answerId = `faq-answer-${index}`;
+
+                    return (
+                        <article
+                            className={`${styles.item} ${isOpen ? styles.itemOpen : ""}`}
+                            key={item.question}
+                        >
+                            <button
+                                className={styles.summary}
+                                type="button"
+                                aria-expanded={isOpen}
+                                aria-controls={answerId}
+                                onClick={() => setActiveIndex(isOpen ? -1 : index)}
+                            >
+                                <span>{item.question}</span>
+                                <span className={styles.icon} aria-hidden="true">
+                                    +
+                                </span>
+                            </button>
+                            <div
+                                className={styles.answerWrap}
+                                id={answerId}
+                                role="region"
+                                aria-hidden={!isOpen}
+                            >
+                                <div className={styles.answer}>
+                                    <p>{item.answer}</p>
+                                </div>
+                            </div>
+                        </article>
+                    );
+                })}
             </div>
         </section>
     );
