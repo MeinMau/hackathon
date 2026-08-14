@@ -1,161 +1,149 @@
-const appsScriptUrl =
-  process.env.REGISTRATION_WEB_APP_URL || process.env.NEXT_PUBLIC_REGISTRATION_WEB_APP_URL;
-const appsScriptTimeoutMs = 20000;
+import { FirebaseConfigurationError } from "@/lib/firebase-admin";
+import {
+  confirmEmailCode,
+  registrationResponseMetadata,
+  requestEmailCode,
+  type RegistrationInput,
+  type RegistrationResult,
+} from "@/lib/registration-service";
+
 const maxRequestBytes = 32_000;
-const expectedSource = "hackathon-registration";
-const expectedVersion = "turnstile-email-otp-v2";
-const versionCheckTtlMs = 5 * 60 * 1000;
-let versionVerifiedAt = 0;
-const forwardedFields = [
-  "action",
-  "source",
-  "website",
-  "submissionId",
-  "verificationId",
-  "verificationCode",
-  "nombreCompleto",
-  "telefono",
-  "correoElectronico",
-  "gradoEscolar",
-  "escuelaProcedencia",
-  "matriculaEscolar",
-  "tecnologias",
-  "hardSkills",
-  "softSkills",
-  "reglamento",
-  "cf-turnstile-response",
-] as const;
+const allowedContentTypes = ["multipart/form-data", "application/x-www-form-urlencoded"];
 
 export const runtime = "nodejs";
 
-type AppsScriptResponse = {
-  ok?: boolean;
-  ignored?: boolean;
-  error?: string;
-  field?: string;
-  fields?: string[];
-  retryAfterSeconds?: number;
-  source?: string;
-  version?: string;
-  submissionId?: string;
-  verificationRequired?: boolean;
-  verificationId?: string;
-  maskedEmail?: string;
-  expiresInSeconds?: number;
-  attemptsRemaining?: number;
-  emailVerified?: boolean;
+type RegistrationResponse = RegistrationResult & {
+  source: string;
+  version: string;
+  submissionId: string;
 };
 
-function jsonResponse(payload: AppsScriptResponse, status = 200) {
-  return Response.json(payload, {
-    status,
-    headers: { "Cache-Control": "no-store" },
+function statusForResult(payload: RegistrationResult) {
+  switch (payload.error) {
+    case "rate_limited":
+    case "code_recently_sent":
+    case "email_provider_rate_limited":
+      return 429;
+    case "duplicate_registration":
+      return 409;
+    case "resend_not_configured":
+    case "turnstile_not_configured":
+    case "otp_not_configured":
+    case "firebase_not_configured":
+      return 503;
+    case "email_send_failed":
+      return 502;
+    case "internal_error":
+      return 500;
+    case undefined:
+      return 200;
+    default:
+      return 400;
+  }
+}
+
+function jsonResponse(payload: RegistrationResult, submissionId = "", status?: number) {
+  const responsePayload: RegistrationResponse = {
+    ...registrationResponseMetadata,
+    submissionId,
+    ...payload,
+  };
+
+  return Response.json(responsePayload, {
+    status: status ?? statusForResult(payload),
+    headers: {
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+    },
   });
 }
 
-async function verifyAppsScriptVersion() {
-  if (Date.now() - versionVerifiedAt < versionCheckTtlMs) {
-    return { ok: true };
+function formValue(formData: FormData, field: string) {
+  const value = formData.get(field);
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function parseRegistrationInput(formData: FormData): RegistrationInput {
+  return {
+    website: formValue(formData, "website"),
+    submissionId: formValue(formData, "submissionId"),
+    verificationId: formValue(formData, "verificationId"),
+    verificationCode: formValue(formData, "verificationCode"),
+    nombreCompleto: formValue(formData, "nombreCompleto"),
+    telefono: formValue(formData, "telefono"),
+    correoElectronico: formValue(formData, "correoElectronico"),
+    gradoEscolar: formValue(formData, "gradoEscolar"),
+    escuelaProcedencia: formValue(formData, "escuelaProcedencia"),
+    matriculaEscolar: formValue(formData, "matriculaEscolar"),
+    tecnologias: formValue(formData, "tecnologias"),
+    hardSkills: formValue(formData, "hardSkills"),
+    softSkills: formValue(formData, "softSkills"),
+    reglamento: formValue(formData, "reglamento"),
+    turnstileToken: formValue(formData, "cf-turnstile-response"),
+  };
+}
+
+function getClientIp(request: Request) {
+  const cloudflareIp = request.headers.get("cf-connecting-ip")?.trim();
+  if (cloudflareIp) {
+    return cloudflareIp;
   }
 
-  try {
-    const response = await fetch(appsScriptUrl as string, {
-      cache: "no-store",
-      redirect: "follow",
-      signal: AbortSignal.timeout(appsScriptTimeoutMs),
-    });
-    const payload = (await response.json()) as AppsScriptResponse;
-
-    if (!response.ok || payload.version !== expectedVersion) {
-      return { ok: false, error: "apps_script_version_mismatch" };
-    }
-
-    versionVerifiedAt = Date.now();
-    return { ok: true };
-  } catch {
-    return { ok: false, error: "apps_script_unreachable" };
-  }
+  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
 }
 
 export async function POST(request: Request) {
-  if (!appsScriptUrl) {
-    return jsonResponse({ ok: false, error: "not_configured" }, 500);
-  }
-
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > maxRequestBytes) {
-    return jsonResponse({ ok: false, error: "request_too_large" }, 413);
+    return jsonResponse({ ok: false, error: "request_too_large" }, "", 413);
+  }
+
+  const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
+  if (!allowedContentTypes.some((allowedType) => contentType.startsWith(allowedType))) {
+    return jsonResponse({ ok: false, error: "invalid_request" }, "", 415);
   }
 
   let formData: FormData;
   try {
-    formData = await request.formData();
-  } catch {
-    return jsonResponse({ ok: false, error: "invalid_request" }, 400);
-  }
-
-  const body = new URLSearchParams();
-
-  for (const key of forwardedFields) {
-    const value = formData.get(key);
-    if (typeof value === "string") {
-      body.set(key, value);
+    const rawBody = await request.arrayBuffer();
+    if (rawBody.byteLength > maxRequestBytes) {
+      return jsonResponse({ ok: false, error: "request_too_large" }, "", 413);
     }
+
+    const bodyRequest = new Request(request.url, {
+      method: "POST",
+      headers: request.headers,
+      body: rawBody,
+    });
+    formData = await bodyRequest.formData();
+  } catch {
+    return jsonResponse({ ok: false, error: "invalid_request" }, "", 400);
   }
 
-  const submissionId = body.get("submissionId") || "";
-  const action = body.get("action") || "";
+  const data = parseRegistrationInput(formData);
+  const action = formValue(formData, "action");
   if (
-    !submissionId ||
+    !data.submissionId ||
+    data.submissionId.length > 128 ||
     !["request_email_code", "confirm_email_code"].includes(action)
   ) {
-    return jsonResponse({ ok: false, error: "invalid_request" }, 400);
-  }
-
-  body.set("responseMode", "json");
-
-  const versionCheck = await verifyAppsScriptVersion();
-  if (!versionCheck.ok) {
-    return jsonResponse({ ok: false, error: versionCheck.error }, 503);
+    return jsonResponse({ ok: false, error: "invalid_request" }, data.submissionId, 400);
   }
 
   try {
-    const response = await fetch(appsScriptUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-      },
-      body,
-      cache: "no-store",
-      redirect: "follow",
-      signal: AbortSignal.timeout(appsScriptTimeoutMs),
-    });
-    const text = await response.text();
+    const result =
+      action === "request_email_code"
+        ? await requestEmailCode(data, getClientIp(request))
+        : await confirmEmailCode(data);
 
-    if (!response.ok) {
-      return jsonResponse({ ok: false, error: "apps_script_http_error" }, 502);
-    }
-
-    try {
-      const payload = JSON.parse(text) as AppsScriptResponse;
-
-      if (
-        payload.source !== expectedSource ||
-        payload.submissionId !== submissionId ||
-        typeof payload.ok !== "boolean"
-      ) {
-        return jsonResponse({ ok: false, error: "invalid_apps_script_response" }, 502);
-      }
-
-      return jsonResponse(payload);
-    } catch {
-      return jsonResponse({ ok: false, error: "invalid_apps_script_response" }, 502);
-    }
+    return jsonResponse(result, data.submissionId);
   } catch (error) {
-    if (error instanceof DOMException && error.name === "TimeoutError") {
-      return jsonResponse({ ok: false, error: "apps_script_timeout" }, 504);
+    if (error instanceof FirebaseConfigurationError) {
+      console.error(error.message);
+      return jsonResponse({ ok: false, error: "firebase_not_configured" }, data.submissionId);
     }
 
-    return jsonResponse({ ok: false, error: "apps_script_unreachable" }, 502);
+    console.error("Registration request failed.", error);
+    return jsonResponse({ ok: false, error: "internal_error" }, data.submissionId);
   }
 }

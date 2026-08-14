@@ -83,9 +83,13 @@ function getResponseMessage(response: RegistrationResponse) {
     case "captcha_failed":
       return "No pudimos validar que eres una persona. Recarga la verificacion e intenta de nuevo.";
     case "turnstile_not_configured":
-      return "Falta configurar la clave secreta de Turnstile en Google Apps Script.";
+      return "Falta configurar la clave secreta de Turnstile en el servidor.";
     case "resend_not_configured":
       return "Falta terminar la configuracion del correo de confirmacion.";
+    case "otp_not_configured":
+      return "Falta configurar la seguridad de los codigos de confirmacion.";
+    case "firebase_not_configured":
+      return "Falta terminar la configuracion de Firebase en el servidor.";
     case "email_send_failed":
       return "No pudimos enviar el codigo. Revisa el correo e intenta de nuevo.";
     case "email_provider_rate_limited":
@@ -98,16 +102,8 @@ function getResponseMessage(response: RegistrationResponse) {
       return "El codigo vencio. Vuelve a tus datos para solicitar uno nuevo.";
     case "too_many_code_attempts":
       return "El codigo fue bloqueado por demasiados intentos. Solicita uno nuevo.";
-    case "not_configured":
-      return "Falta configurar la URL de Google Apps Script en el servidor.";
-    case "apps_script_timeout":
-      return "El registro tardo demasiado en responder. Intenta de nuevo en un momento.";
-    case "apps_script_unreachable":
-    case "apps_script_http_error":
-    case "invalid_apps_script_response":
+    case "internal_error":
       return "No pudimos conectar con el registro. Intenta de nuevo en unos minutos.";
-    case "apps_script_version_mismatch":
-      return "El sistema de confirmacion esta pendiente de publicarse. Intenta de nuevo mas tarde.";
     case "request_too_large":
     case "invalid_request":
     case "invalid_action":

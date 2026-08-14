@@ -1,0 +1,107 @@
+CONFIGURACION DE FIREBASE PARA EL REGISTRO
+=========================================
+
+1. Crear el proyecto
+
+   - Entra a https://console.firebase.google.com/ y crea un proyecto.
+   - Ve a Build > Firestore Database y selecciona Create database.
+   - Elige Production mode.
+   - Escoge con cuidado la region mas cercana a tu despliegue y usuarios. La
+     ubicacion de Firestore no se puede cambiar despues.
+
+2. Cerrar el acceso desde navegadores
+
+   - En Firestore Database > Rules pega el contenido de firestore.rules y
+     publica los cambios.
+   - Estas reglas niegan todas las lecturas y escrituras del cliente. El route
+     handler de Next usa Firebase Admin y puede operar de forma segura.
+
+3. Crear las credenciales privadas
+
+   - Abre Project settings > Service accounts.
+   - Selecciona Generate new private key y descarga el JSON.
+   - No agregues ese archivo al repositorio.
+   - Copia project_id, client_email y private_key a las variables equivalentes
+     de firebase.env.example.
+
+4. Preparar las variables locales
+
+   - Copia las variables de firebase.env.example a .env.local.
+   - Conserva NEXT_PUBLIC_TURNSTILE_SITE_KEY, pero mueve TURNSTILE_SECRET_KEY,
+     RESEND_API_KEY, RESEND_FROM y RESEND_REPLY_TO desde Apps Script al entorno
+     privado del servidor.
+   - REGISTRATION_WEB_APP_URL y NEXT_PUBLIC_REGISTRATION_WEB_APP_URL ya no se
+     utilizan en esta rama.
+   - Genera REGISTRATION_OTP_SECRET con este comando:
+
+     node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+
+5. Limpieza automatica opcional (TTL)
+
+   - TTL requiere billing activo en Firebase/Google Cloud.
+   - Por ahora este branch no despliega TTL para poder seguir en Spark.
+   - La aplicacion comprueba la expiracion por si misma; sin TTL, los OTP y rate
+     limits expirados dejan de servir aunque sus documentos sigan guardados.
+   - Limpieza manual recomendada:
+     - En pendingRegistrations borra documentos viejos, por ejemplo de mas de 1
+       hora o 1 dia.
+     - En registrationRateLimits borra documentos con expiresAt en el pasado.
+     - No borres registrations.
+     - No borres registrationUniqueKeys.
+   - Cuando quieras activar TTL, cambia a Blaze con un budget alert bajo y crea
+     politicas TTL para expiresAt en pendingRegistrations y
+     registrationRateLimits.
+
+6. Configurar Cloudflare y Resend
+
+   - La site key publica de Turnstile sigue en NEXT_PUBLIC_TURNSTILE_SITE_KEY.
+   - La secret key queda solamente en TURNSTILE_SECRET_KEY del servidor.
+   - TURNSTILE_ALLOWED_HOSTNAMES es opcional. En produccion conviene incluir el
+     dominio real. Separa varios dominios con comas.
+   - RESEND_FROM debe usar un dominio verificado en Resend.
+   - SEND_REGISTRATION_SUCCESS_EMAIL controla el correo final de registro
+     confirmado. Usa true para enviarlo y false para apagarlo si quieres cuidar
+     la cuota diaria de Resend.
+
+7. Configurar produccion
+
+   - Carga las mismas variables privadas en el proveedor donde despliegas Next.
+   - No expongas FIREBASE_PRIVATE_KEY, RESEND_API_KEY, TURNSTILE_SECRET_KEY ni
+     REGISTRATION_OTP_SECRET con el prefijo NEXT_PUBLIC_.
+   - Si activas SEND_REGISTRATION_SUCCESS_EMAIL, considera que cada registro
+     completo consume un correo adicional en Resend.
+   - Despues del despliegue prueba solicitud de codigo, codigo incorrecto,
+     expiracion, registro correcto y registro duplicado.
+
+8. Publicar reglas e indices con Firebase CLI
+
+   - Este repo incluye .firebaserc con hackathon-dcf34 como proyecto default.
+   - Antes de publicar, confirma que la CLI esta logueada con una cuenta que
+     tenga acceso a hackathon-dcf34:
+
+     firebase login
+     firebase projects:list
+
+   - Si firebase projects:list no muestra hackathon-dcf34, cambia de cuenta o
+     agrega esa cuenta desde Firebase Console > Configuracion del proyecto >
+     Usuarios y permisos.
+   - Cuando la cuenta sea correcta, publica Firestore:
+
+     npm run firebase:deploy:firestore
+
+DATOS CREADOS EN FIRESTORE
+==========================
+
+registrations
+  Registros confirmados. Solo se escriben despues de validar el OTP.
+
+pendingRegistrations
+  Datos pendientes y hash del OTP. Expiran en 10 minutos.
+
+registrationRateLimits
+  Contadores con identificadores hasheados; no guarda correos o telefonos en
+  texto plano para limitar solicitudes.
+
+registrationUniqueKeys
+  Llaves transaccionales para impedir duplicados por correo, telefono,
+  matricula o nombre.

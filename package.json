@@ -6,10 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "firebase:deploy:firestore": "firebase deploy --only firestore"
   },
   "dependencies": {
     "@number-flow/react": "^0.6.2",
+    "firebase-admin": "^14.2.0",
     "framer-motion": "^13.1.0",
     "next": "16.3.0",
     "react": "19.2.8",
