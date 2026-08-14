@@ -1,0 +1,8 @@
+[build.environment]
+  # FIREBASE_PROJECT_ID is a public Firebase identifier and also appears in
+  # .firebaserc, so omit this key from Netlify's secret-value scan.
+  SECRETS_SCAN_OMIT_KEYS = "FIREBASE_PROJECT_ID"
+
+  # Next/Turbopack can write server-only env values into generated build cache
+  # files. Those cache files are not published, but Netlify scans build output.
+  SECRETS_SCAN_OMIT_PATHS = ".netlify/.next/cache/**,.next/cache/**"

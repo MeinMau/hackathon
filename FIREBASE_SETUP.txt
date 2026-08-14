@@ -75,16 +75,16 @@ CONFIGURACION DE FIREBASE PARA EL REGISTRO
 
 8. Publicar reglas e indices con Firebase CLI
 
-   - Este repo incluye .firebaserc con hackathon-dcf34 como proyecto default.
+   - Este repo incluye .firebaserc con el proyecto default de Firebase.
    - Antes de publicar, confirma que la CLI esta logueada con una cuenta que
-     tenga acceso a hackathon-dcf34:
+     tenga acceso al proyecto de .firebaserc:
 
      firebase login
      firebase projects:list
 
-   - Si firebase projects:list no muestra hackathon-dcf34, cambia de cuenta o
-     agrega esa cuenta desde Firebase Console > Configuracion del proyecto >
-     Usuarios y permisos.
+   - Si firebase projects:list no muestra el proyecto de .firebaserc, cambia de
+     cuenta o agrega esa cuenta desde Firebase Console > Configuracion del
+     proyecto > Usuarios y permisos.
    - Cuando la cuenta sea correcta, publica Firestore:
 
      npm run firebase:deploy:firestore
