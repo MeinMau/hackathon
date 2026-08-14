@@ -12,7 +12,7 @@ const faqItems = [
     {
         question: "¿Cuántas personas puede tener un equipo?",
         answer:
-            "La dinámica está pensada para equipos pequeños y ágiles. Si ya tienes un grupo, mantenlo compacto para repartir mejor diseño, desarrollo y presentación.",
+            "La dinámica está pensada para equipos pequeños y ágiles (3 participantes). Si ya tienes un grupo, mantenlo compacto para repartir mejor diseño, desarrollo y presentación.",
     },
     {
         question: "¿Tengo que llegar con un proyecto ya hecho?",

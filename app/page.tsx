@@ -4,6 +4,7 @@ import LaptopExperience from "../components/LaptopExperience";
 import RegistrationForm from "../components/RegistrationForm/RegistrationForm";
 import { MarqueeLogoScroller } from "../components/ui/marquee-logo-scroller";
 import clicksPhoto from "../public/clicksphoto.png";
+import ingeniaCartoon from "../public/ingenia-cartoon.png";
 import ingeniaLogo from "../public/ingenia-logo.png";
 import serpentinas from "../public/serpentinas.png";
 import styles from "./page.module.css";
@@ -64,7 +65,7 @@ const sponsorLogos = [
     gradient: { from: "#E8E1FF", via: "#BFA8FF", to: "#7C6BD6" },
   },
   {
-    src: "/sponsors/POKEBURRITO_page-0001.jpg",
+    src: "/sponsors/POKEBURRITO_page-0001.png",
     alt: "Pokeburrito",
     gradient: { from: "#77F28B", via: "#1ED760", to: "#107A36" },
   },
@@ -85,11 +86,9 @@ export default function Home() {
         </a>
         <nav className={styles.navPill} aria-label="Main navigation">
           <a href="#">Inicio</a>
-          <a href="#brief">Solutions</a>
-          <a href="#brief">Use Cases</a>
-          <a href="#terminal">Resources</a>
-          <a href="#brief">Plans</a>
-          <a href="#terminal">Terminal</a>
+          <a href="#brief">Info </a>
+          <a href="#faq">FAQ</a>
+          <a href="#terminal">O.S</a>
         </nav>
         <a className={styles.navAction} href="#registro">
           Inscribete
@@ -196,6 +195,13 @@ export default function Home() {
       </section>
 
       <FAQ />
+      <section className={styles.cartoonBridge} aria-label="Ingenia">
+        <Image
+          className={styles.cartoonImage}
+          src={ingeniaCartoon}
+          alt="Ilustracion de Ingenia"
+        />
+      </section>
       <LaptopExperience />
     </main>
   );

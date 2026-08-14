@@ -72,29 +72,33 @@ const MarqueeLogoScroller = React.forwardRef<HTMLElement, MarqueeLogoScrollerPro
                 animation: `marquee ${animationDuration} linear infinite`,
               }}
             >
-              {[...logos, ...logos].map((logo, index) => (
-                <div
-                  key={`${logo.alt}-${index}`}
-                  className="group relative flex h-24 w-40 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--color-sky)]/70"
-                >
+              {[...logos, ...logos].map((logo, index) => {
+                const isBluLogo = logo.alt === "Blu";
+                const isFormacionIntegralLogo = logo.alt === "Formacion Integral";
+                const isLunarLogo = logo.alt === "Lunar";
+
+                return (
                   <div
-                    style={
-                      {
-                        "--from": logo.gradient.from,
-                        "--via": logo.gradient.via,
-                        "--to": logo.gradient.to,
-                      } as React.CSSProperties
-                    }
-                    className="absolute inset-0 scale-150 bg-gradient-to-br from-[var(--from)] via-[var(--via)] to-[var(--to)] opacity-0 transition-all duration-700 ease-out group-hover:scale-100 group-hover:opacity-100"
-                  />
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={logo.src}
-                    alt={logo.alt}
-                    className="relative h-3/4 w-auto object-contain"
-                  />
-                </div>
-              ))}
+                    key={`${logo.alt}-${index}`}
+                    className="relative flex h-24 w-40 shrink-0 items-center justify-center"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={logo.src}
+                      alt={logo.alt}
+                      className={cn(
+                        "w-auto object-contain drop-shadow-[0_10px_16px_rgba(8,31,92,0.24)] transition-transform duration-300 ease-out",
+                        isBluLogo
+                          ? "h-full scale-[1.16] hover:scale-[1.22]"
+                          : isLunarLogo
+                          ? "h-full scale-[1.28] hover:scale-[1.34]"
+                          : "h-3/4 hover:scale-105",
+                        isFormacionIntegralLogo && "brightness-0"
+                      )}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>

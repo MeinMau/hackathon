@@ -2,7 +2,9 @@
 
 import { useEffect } from "react";
 
-const scrollOffset = 18;
+const scrollOffset = 118;
+const revealThreshold = 120;
+const scrollDelta = 8;
 
 function easeInOutCubic(progress: number) {
   return progress < 0.5
@@ -23,6 +25,38 @@ export default function SmoothHashNavigation() {
     let animationFrame = 0;
     let glowTimeout = 0;
     let activeTarget: HTMLElement | null = null;
+    let lastScrollY = window.scrollY;
+    let navRevealFrame = 0;
+
+    function setNavRevealState(state: "visible" | "hidden", mode: "top" | "floating") {
+      document.documentElement.setAttribute("data-nav-reveal", state);
+      document.documentElement.setAttribute("data-nav-mode", mode);
+    }
+
+    function updateNavReveal() {
+      navRevealFrame = 0;
+
+      const currentScrollY = window.scrollY;
+      const delta = currentScrollY - lastScrollY;
+
+      if (currentScrollY < revealThreshold) {
+        setNavRevealState("visible", "top");
+      } else if (delta > scrollDelta) {
+        setNavRevealState("hidden", "floating");
+      } else if (delta < -scrollDelta) {
+        setNavRevealState("visible", "floating");
+      }
+
+      if (Math.abs(delta) > scrollDelta) {
+        lastScrollY = currentScrollY;
+      }
+    }
+
+    function scheduleNavRevealUpdate() {
+      if (!navRevealFrame) {
+        navRevealFrame = window.requestAnimationFrame(updateNavReveal);
+      }
+    }
 
     function clearActiveTarget() {
       if (activeTarget) {
@@ -151,13 +185,19 @@ export default function SmoothHashNavigation() {
       animateScroll(targetY, target);
     }
 
+    setNavRevealState("visible", window.scrollY < revealThreshold ? "top" : "floating");
+    window.addEventListener("scroll", scheduleNavRevealUpdate, { passive: true });
     document.addEventListener("click", handleClick);
 
     return () => {
+      window.removeEventListener("scroll", scheduleNavRevealUpdate);
       document.removeEventListener("click", handleClick);
       window.cancelAnimationFrame(animationFrame);
+      window.cancelAnimationFrame(navRevealFrame);
       window.clearTimeout(glowTimeout);
       document.documentElement.removeAttribute("data-anchor-scrolling");
+      document.documentElement.removeAttribute("data-nav-reveal");
+      document.documentElement.removeAttribute("data-nav-mode");
       clearActiveTarget();
     };
   }, []);
