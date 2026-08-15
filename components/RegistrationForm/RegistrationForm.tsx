@@ -114,7 +114,7 @@ function getResponseMessage(response: RegistrationResponse) {
     case "invalid_email":
       return "El correo electronico no parece valido.";
     case "invalid_phone":
-      return "El telefono debe incluir al menos 10 digitos.";
+      return "El telefono debe incluir exactamente 10 digitos.";
     case "invalid_grade":
       return "Selecciona un grado escolar valido.";
     default:
@@ -326,7 +326,15 @@ export default function RegistrationForm() {
                 name="telefono"
                 type="tel"
                 placeholder="833 000 0000"
-                maxLength={30}
+                inputMode="numeric"
+                autoComplete="tel-national"
+                pattern="[0-9]{10}"
+                minLength={10}
+                maxLength={10}
+                title="Ingresa un numero telefonico de 10 digitos."
+                onChange={(event) => {
+                  event.currentTarget.value = event.currentTarget.value.replace(/\D/g, "").slice(0, 10);
+                }}
                 required
               />
             </label>

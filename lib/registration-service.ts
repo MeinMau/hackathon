@@ -201,7 +201,7 @@ function validateRegistration(data: RegistrationInput):
     return { ok: false, error: "invalid_email" };
   }
 
-  if (normalized.telefono.length < 10) {
+  if (normalized.telefono.length !== 10) {
     return { ok: false, error: "invalid_phone" };
   }
 

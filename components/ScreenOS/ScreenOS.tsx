@@ -215,7 +215,7 @@ const CMD_INTRO = [
         =%@@   +@@:.@@@   +@@  @@#`,
   "",
   "Hackathon ISND [v06/08/26]",
-  "Ingeniería de Software y Desarrollo de Negocios, IEST Anahuac.",
+  "Ingenieria en Sistemas y Negocios Digitales, IEST Anahuac.",
 ];
 
 const HACKATHON_INFO_COMMANDS = new Set(["hackaton", "hackathon", "info", "informacion"]);
@@ -296,7 +296,7 @@ function CmdApp({ onOpenApp }: CmdAppProps) {
     if (normalizedCommand === "about") {
       return [
         "Hackathon ISND [v06/08/26]",
-        "Ingeniería de Software y Desarrollo de Negocios, IEST Anahuac.",
+        "Ingenieria en Sistemas y Negocios Digitales, IEST Anahuac.",
         "Ingenia OS listo para demo interactiva.",
       ];
     }
