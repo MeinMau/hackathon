@@ -83,16 +83,62 @@ function parseRegistrationInput(formData: FormData): RegistrationInput {
   };
 }
 
+function normalizeOrigin(value: string) {
+  try {
+    const url = new URL(value);
+    return `${url.protocol}//${url.host}`.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function getAllowedOrigins(request: Request) {
+  const configuredOrigins = (process.env.REGISTRATION_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => normalizeOrigin(origin.trim()))
+    .filter(Boolean);
+
+  if (configuredOrigins.length) {
+    return configuredOrigins;
+  }
+
+  const requestOrigin = normalizeOrigin(request.url);
+  const host = request.headers.get("host")?.trim();
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const protocol = forwardedProto || new URL(request.url).protocol.replace(":", "");
+  const hostOrigin = host ? normalizeOrigin(`${protocol}://${host}`) : "";
+
+  return [requestOrigin, hostOrigin].filter(Boolean);
+}
+
+function isAllowedPostOrigin(request: Request) {
+  const source = request.headers.get("origin") || request.headers.get("referer");
+  const sourceOrigin = source ? normalizeOrigin(source) : "";
+
+  return Boolean(sourceOrigin && getAllowedOrigins(request).includes(sourceOrigin));
+}
+
 function getClientIp(request: Request) {
-  const cloudflareIp = request.headers.get("cf-connecting-ip")?.trim();
-  if (cloudflareIp) {
-    return cloudflareIp;
+  const preferredHeaders = [
+    "cf-connecting-ip",
+    "x-nf-client-connection-ip",
+    "x-real-ip",
+  ];
+  for (const header of preferredHeaders) {
+    const value = request.headers.get(header)?.trim();
+    if (value) {
+      return value;
+    }
   }
 
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
 }
 
 export async function POST(request: Request) {
+  if (!isAllowedPostOrigin(request)) {
+    return jsonResponse({ ok: false, error: "invalid_request" }, "", 403);
+  }
+
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > maxRequestBytes) {
     return jsonResponse({ ok: false, error: "request_too_large" }, "", 413);

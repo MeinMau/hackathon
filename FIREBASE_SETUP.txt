@@ -58,6 +58,9 @@ CONFIGURACION DE FIREBASE PARA EL REGISTRO
    - La secret key queda solamente en TURNSTILE_SECRET_KEY del servidor.
    - TURNSTILE_ALLOWED_HOSTNAMES es opcional. En produccion conviene incluir el
      dominio real. Separa varios dominios con comas.
+   - REGISTRATION_ALLOWED_ORIGINS limita que el endpoint /api/register acepte
+     POSTs solo desde tus origenes web. En produccion pon el origen exacto,
+     por ejemplo https://tudominio.com.
    - RESEND_FROM debe usar un dominio verificado en Resend.
    - SEND_REGISTRATION_SUCCESS_EMAIL controla el correo final de registro
      confirmado. Usa true para enviarlo y false para apagarlo si quieres cuidar

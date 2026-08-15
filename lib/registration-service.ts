@@ -10,14 +10,17 @@ import { Timestamp } from "firebase-admin/firestore";
 import { getRegistrationFirestore } from "@/lib/firebase-admin";
 
 const RESPONSE_SOURCE = "hackathon-registration";
-const PROTECTION_VERSION = "firebase-firestore-v1";
+const PROTECTION_VERSION = "firebase-firestore-v2";
 const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const RESEND_EMAIL_URL = "https://api.resend.com/emails";
 
 const RATE_LIMIT_WINDOW_SECONDS = 10 * 60;
 const RATE_LIMIT_MAX_ATTEMPTS = 3;
+const IP_RATE_LIMIT_WINDOW_SECONDS = 10 * 60;
+const IP_RATE_LIMIT_MAX_ATTEMPTS = 10;
 const EMAIL_SEND_WINDOW_SECONDS = 60 * 60;
 const EMAIL_SEND_MAX_ATTEMPTS = 3;
+const IP_EMAIL_SEND_MAX_ATTEMPTS = 12;
 const EMAIL_SEND_COOLDOWN_SECONDS = 60;
 const VERIFICATION_TTL_SECONDS = 10 * 60;
 const VERIFICATION_MAX_ATTEMPTS = 5;
@@ -119,6 +122,13 @@ type ConfirmEmailTransactionResult = RegistrationResult & {
 
 type TimestampLike = {
   toMillis: () => number;
+};
+
+type RateLimitIdentifier = {
+  kind: string;
+  value: string;
+  maxAttempts: number;
+  windowSeconds: number;
 };
 
 export const registrationResponseMetadata = {
@@ -236,15 +246,38 @@ function getTimestampMillis(value: unknown) {
   return 0;
 }
 
-async function checkRequestRateLimit(normalized: NormalizedRegistration) {
+async function checkRequestRateLimit(normalized: NormalizedRegistration, clientIp: string) {
   const db = getRegistrationFirestore();
-  const identifiers = [
-    ["attempt-email", normalized.correoElectronico],
-    ["attempt-phone", normalized.telefono],
-    ["attempt-student", normalized.matriculaEscolar],
-  ] as const;
-  const references = identifiers.map(([kind, value]) =>
-    db.collection(RATE_LIMITS_COLLECTION).doc(rateLimitDocumentId(kind, value)),
+  const identifiers: RateLimitIdentifier[] = [
+    {
+      kind: "attempt-email",
+      value: normalized.correoElectronico,
+      maxAttempts: RATE_LIMIT_MAX_ATTEMPTS,
+      windowSeconds: RATE_LIMIT_WINDOW_SECONDS,
+    },
+    {
+      kind: "attempt-phone",
+      value: normalized.telefono,
+      maxAttempts: RATE_LIMIT_MAX_ATTEMPTS,
+      windowSeconds: RATE_LIMIT_WINDOW_SECONDS,
+    },
+    {
+      kind: "attempt-student",
+      value: normalized.matriculaEscolar,
+      maxAttempts: RATE_LIMIT_MAX_ATTEMPTS,
+      windowSeconds: RATE_LIMIT_WINDOW_SECONDS,
+    },
+    {
+      kind: "attempt-ip",
+      value: clientIp,
+      maxAttempts: IP_RATE_LIMIT_MAX_ATTEMPTS,
+      windowSeconds: IP_RATE_LIMIT_WINDOW_SECONDS,
+    },
+  ].filter((identifier) => identifier.value);
+  const references = identifiers.map((identifier) =>
+    db
+      .collection(RATE_LIMITS_COLLECTION)
+      .doc(rateLimitDocumentId(identifier.kind, identifier.value)),
   );
 
   return db.runTransaction<RegistrationResult>(async (transaction) => {
@@ -252,12 +285,12 @@ async function checkRequestRateLimit(normalized: NormalizedRegistration) {
     const nowMs = Date.now();
     let retryAfterSeconds = 0;
 
-    snapshots.forEach((snapshot) => {
+    snapshots.forEach((snapshot, index) => {
       const data = snapshot.data();
       const expiresAtMs = getTimestampMillis(data?.windowExpiresAt);
       const count = expiresAtMs > nowMs ? Number(data?.count ?? 0) : 0;
 
-      if (count >= RATE_LIMIT_MAX_ATTEMPTS) {
+      if (count >= identifiers[index].maxAttempts) {
         retryAfterSeconds = Math.max(
           retryAfterSeconds,
           Math.max(1, Math.ceil((expiresAtMs - nowMs) / 1000)),
@@ -275,10 +308,10 @@ async function checkRequestRateLimit(normalized: NormalizedRegistration) {
       const isActive = currentExpiryMs > nowMs;
       const windowExpiresAtMs = isActive
         ? currentExpiryMs
-        : nowMs + RATE_LIMIT_WINDOW_SECONDS * 1000;
+        : nowMs + identifiers[index].windowSeconds * 1000;
 
       transaction.set(references[index], {
-        kind: identifiers[index][0],
+        kind: identifiers[index].kind,
         count: isActive ? Number(data?.count ?? 0) + 1 : 1,
         windowExpiresAt: Timestamp.fromMillis(windowExpiresAtMs),
         expiresAt: Timestamp.fromMillis(windowExpiresAtMs),
@@ -290,17 +323,33 @@ async function checkRequestRateLimit(normalized: NormalizedRegistration) {
   });
 }
 
-async function reserveEmailSend(email: string) {
+async function reserveEmailSend(email: string, clientIp: string) {
   const db = getRegistrationFirestore();
-  const reference = db
-    .collection(RATE_LIMITS_COLLECTION)
-    .doc(rateLimitDocumentId("otp-email", email));
+  const identifiers: RateLimitIdentifier[] = [
+    {
+      kind: "otp-email",
+      value: email,
+      maxAttempts: EMAIL_SEND_MAX_ATTEMPTS,
+      windowSeconds: EMAIL_SEND_WINDOW_SECONDS,
+    },
+    {
+      kind: "otp-ip",
+      value: clientIp,
+      maxAttempts: IP_EMAIL_SEND_MAX_ATTEMPTS,
+      windowSeconds: EMAIL_SEND_WINDOW_SECONDS,
+    },
+  ].filter((identifier) => identifier.value);
+  const references = identifiers.map((identifier) =>
+    db
+      .collection(RATE_LIMITS_COLLECTION)
+      .doc(rateLimitDocumentId(identifier.kind, identifier.value)),
+  );
 
   return db.runTransaction<RegistrationResult>(async (transaction) => {
-    const snapshot = await transaction.get(reference);
-    const data = snapshot.data();
+    const snapshots = await transaction.getAll(...references);
     const nowMs = Date.now();
-    const cooldownUntilMs = getTimestampMillis(data?.cooldownUntil);
+    const emailData = snapshots[0]?.data();
+    const cooldownUntilMs = getTimestampMillis(emailData?.cooldownUntil);
 
     if (cooldownUntilMs > nowMs) {
       return {
@@ -310,33 +359,55 @@ async function reserveEmailSend(email: string) {
       };
     }
 
-    const currentWindowExpiresAtMs = getTimestampMillis(data?.windowExpiresAt);
-    const isActiveWindow = currentWindowExpiresAtMs > nowMs;
-    const sendCount = isActiveWindow ? Number(data?.count ?? 0) : 0;
+    let retryAfterSeconds = 0;
+    snapshots.forEach((snapshot, index) => {
+      const data = snapshot.data();
+      const currentWindowExpiresAtMs = getTimestampMillis(data?.windowExpiresAt);
+      const isActiveWindow = currentWindowExpiresAtMs > nowMs;
+      const sendCount = isActiveWindow ? Number(data?.count ?? 0) : 0;
 
-    if (sendCount >= EMAIL_SEND_MAX_ATTEMPTS) {
+      if (sendCount >= identifiers[index].maxAttempts) {
+        retryAfterSeconds = Math.max(
+          retryAfterSeconds,
+          Math.max(1, Math.ceil((currentWindowExpiresAtMs - nowMs) / 1000)),
+        );
+      }
+    });
+
+    if (retryAfterSeconds) {
       return {
         ok: false,
         error: "rate_limited",
-        retryAfterSeconds: Math.max(
-          1,
-          Math.ceil((currentWindowExpiresAtMs - nowMs) / 1000),
-        ),
+        retryAfterSeconds,
       };
     }
 
-    const windowExpiresAtMs = isActiveWindow
-      ? currentWindowExpiresAtMs
-      : nowMs + EMAIL_SEND_WINDOW_SECONDS * 1000;
     const cooldownExpiresAtMs = nowMs + EMAIL_SEND_COOLDOWN_SECONDS * 1000;
 
-    transaction.set(reference, {
-      kind: "otp-email",
-      count: sendCount + 1,
-      windowExpiresAt: Timestamp.fromMillis(windowExpiresAtMs),
-      cooldownUntil: Timestamp.fromMillis(cooldownExpiresAtMs),
-      expiresAt: Timestamp.fromMillis(Math.max(windowExpiresAtMs, cooldownExpiresAtMs)),
-      updatedAt: Timestamp.fromMillis(nowMs),
+    snapshots.forEach((snapshot, index) => {
+      const data = snapshot.data();
+      const currentWindowExpiresAtMs = getTimestampMillis(data?.windowExpiresAt);
+      const isActiveWindow = currentWindowExpiresAtMs > nowMs;
+      const windowExpiresAtMs = isActiveWindow
+        ? currentWindowExpiresAtMs
+        : nowMs + identifiers[index].windowSeconds * 1000;
+      const nextData: Record<string, unknown> = {
+        kind: identifiers[index].kind,
+        count: isActiveWindow ? Number(data?.count ?? 0) + 1 : 1,
+        windowExpiresAt: Timestamp.fromMillis(windowExpiresAtMs),
+        expiresAt: Timestamp.fromMillis(
+          identifiers[index].kind === "otp-email"
+            ? Math.max(windowExpiresAtMs, cooldownExpiresAtMs)
+            : windowExpiresAtMs,
+        ),
+        updatedAt: Timestamp.fromMillis(nowMs),
+      };
+
+      if (identifiers[index].kind === "otp-email") {
+        nextData.cooldownUntil = Timestamp.fromMillis(cooldownExpiresAtMs);
+      }
+
+      transaction.set(references[index], nextData);
     });
 
     return { ok: true };
@@ -634,14 +705,14 @@ export async function requestEmailCode(
     return { ok: false, error: "otp_not_configured" };
   }
 
-  const requestLimit = await checkRequestRateLimit(validation.normalized);
-  if (!requestLimit.ok) {
-    return requestLimit;
-  }
-
   const turnstile = await verifyTurnstile(clean(data.turnstileToken), clientIp);
   if (!turnstile.ok) {
     return turnstile;
+  }
+
+  const requestLimit = await checkRequestRateLimit(validation.normalized, clientIp);
+  if (!requestLimit.ok) {
+    return requestLimit;
   }
 
   const duplicateField = await findDuplicate(validation.normalized);
@@ -649,7 +720,7 @@ export async function requestEmailCode(
     return { ok: false, error: "duplicate_registration", field: duplicateField };
   }
 
-  const emailLimit = await reserveEmailSend(validation.normalized.correoElectronico);
+  const emailLimit = await reserveEmailSend(validation.normalized.correoElectronico, clientIp);
   if (!emailLimit.ok) {
     return emailLimit;
   }
