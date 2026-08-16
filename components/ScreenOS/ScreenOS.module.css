@@ -455,6 +455,34 @@
   height: 18px;
 }
 
+.closeAllTaskbarButton {
+  display: grid;
+  flex: 0 0 34px;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(208, 227, 255, 0.58);
+  border-radius: 6px;
+  background: rgba(208, 227, 255, 0.1);
+  color: var(--os-neon);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.closeAllTaskbarButton:hover,
+.closeAllTaskbarButton:focus-visible {
+  background: var(--os-neon);
+  color: var(--os-bg);
+  outline: none;
+}
+
+.closeAllTaskbarButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
 .clock {
   flex: 0 0 auto;
   min-width: 74px;

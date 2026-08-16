@@ -3,6 +3,7 @@
 import {
   CSSProperties,
   FormEvent,
+  MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
@@ -122,6 +123,18 @@ function ScreenIcon({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+function scrollToRegistration() {
+  const registrationSection = document.getElementById("registro");
+
+  if (!registrationSection) {
+    return false;
+  }
+
+  registrationSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  window.history.replaceState(null, "", "#registro");
+  return true;
+}
+
 function NotesApp() {
   const [note, setNote] = useState(DEFAULT_NOTE);
   const [status, setStatus] = useState("Auto guardado activo");
@@ -220,6 +233,36 @@ const CMD_INTRO = [
   "Ingenieria en Sistemas y Negocios Digitales, IEST Anahuac.",
 ];
 
+const CMD_COMMAND_BANK = [
+  "help",
+  "about",
+  "clear",
+  "cls",
+  "dir",
+  "ls",
+  "date",
+  "time",
+  "lp",
+  "hackaton",
+  "hackathon",
+  "info",
+  "informacion",
+  "open notas",
+  "notas",
+  "open navegador",
+  "navegador",
+  "browser",
+  "open cmd",
+  "cmd",
+  "open formulario",
+  "formulario",
+  "open registro",
+  "registro",
+  "inscripcion",
+  "echo",
+  "ping",
+];
+
 const HACKATHON_INFO_COMMANDS = new Set(["hackaton", "hackathon", "info", "informacion"]);
 
 const HACKATHON_INFO = [
@@ -250,12 +293,86 @@ const HACKATHON_INFO = [
   "  Veintitres Joyeria Blu Coffee        Pokeburrito",
   "  La Marquesita      Ingenia           Formacion Integral FESAL",
   "  ISND               JetBrains",
+  " [REGISTRO]",
+  "  Escribe el comando 'open formulario' o 'registro'",
+  "  para abrir el formulario de registro.",
   ""
 ];
+
+function normalizeCommandText(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+function getCommandDistance(left: string, right: string) {
+  const distances = Array.from({ length: left.length + 1 }, (_, leftIndex) =>
+    Array.from({ length: right.length + 1 }, (_, rightIndex) =>
+      leftIndex === 0 ? rightIndex : rightIndex === 0 ? leftIndex : 0,
+    ),
+  );
+
+  for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+    for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+      const substitutionCost = left[leftIndex - 1] === right[rightIndex - 1] ? 0 : 1;
+      distances[leftIndex][rightIndex] = Math.min(
+        distances[leftIndex - 1][rightIndex] + 1,
+        distances[leftIndex][rightIndex - 1] + 1,
+        distances[leftIndex - 1][rightIndex - 1] + substitutionCost,
+      );
+    }
+  }
+
+  return distances[left.length][right.length];
+}
+
+function getAutocompleteCommand(value: string) {
+  const normalizedValue = normalizeCommandText(value);
+
+  if (!normalizedValue) {
+    return "help";
+  }
+
+  const normalizedCommands = CMD_COMMAND_BANK.map((command) => ({
+    command,
+    normalizedCommand: normalizeCommandText(command),
+  }));
+  const prefixMatch = normalizedCommands.find(({ normalizedCommand }) =>
+    normalizedCommand.startsWith(normalizedValue),
+  );
+
+  if (prefixMatch) {
+    return prefixMatch.command;
+  }
+
+  const tokenMatch = normalizedCommands.find(({ normalizedCommand }) =>
+    normalizedCommand.split(" ").some((token) => token.startsWith(normalizedValue)),
+  );
+
+  if (tokenMatch) {
+    return tokenMatch.command;
+  }
+
+  const nearestMatch = normalizedCommands
+    .map(({ command, normalizedCommand }) => ({
+      command,
+      distance: getCommandDistance(normalizedValue, normalizedCommand),
+    }))
+    .sort((left, right) => left.distance - right.distance || left.command.length - right.command.length)[0];
+
+  return nearestMatch.distance <= Math.max(2, Math.ceil(normalizedValue.length * 0.45))
+    ? nearestMatch.command
+    : "";
+}
 
 function CmdApp({ onOpenApp }: CmdAppProps) {
   const [output, setOutput] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
 
@@ -267,10 +384,7 @@ function CmdApp({ onOpenApp }: CmdAppProps) {
 
   function resolveCommand(rawCommand: string) {
     const command = rawCommand.trim();
-    const normalizedCommand = command
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
+    const normalizedCommand = normalizeCommandText(command);
     const commandTokens = normalizedCommand.match(/[a-z0-9]+/g) ?? [];
 
     if (!command) {
@@ -289,9 +403,11 @@ function CmdApp({ onOpenApp }: CmdAppProps) {
     if (normalizedCommand === "help") {
       return [
         "Comandos disponibles:",
-        "help, about, clear, cls, dir, date, time, lp",
-        "hackaton, hackathon, info, informacion",
-        "open notas, open navegador, open cmd",
+        CMD_COMMAND_BANK.slice(0, 9).join(", "),
+        CMD_COMMAND_BANK.slice(9, 17).join(", "),
+        CMD_COMMAND_BANK.slice(17, 25).join(", "),
+        CMD_COMMAND_BANK.slice(25).join(", "),
+        "Usa Tab para autocompletar.",
       ];
     }
 
@@ -324,7 +440,7 @@ function CmdApp({ onOpenApp }: CmdAppProps) {
     if (normalizedCommand === "lp") {
       return [
         "Landing protocol: armado.",
-        "Scroll hook pendiente: laptop cerrada -> pantalla abierta -> ScreenOS interactivo.",
+        "Scroll hook pendiente: laptop cerrada -> pantalla abierta -> Ingenia OS interactivo.",
       ];
     }
 
@@ -345,6 +461,22 @@ function CmdApp({ onOpenApp }: CmdAppProps) {
     if (normalizedCommand === "open cmd" || normalizedCommand === "cmd") {
       onOpenApp("cmd");
       return ["Abriendo nueva instancia de CMD..."];
+    }
+
+    if (
+      normalizedCommand === "open formulario" ||
+      normalizedCommand === "formulario" ||
+      normalizedCommand === "open registro" ||
+      normalizedCommand === "registro" ||
+      normalizedCommand === "inscripcion"
+    ) {
+      return scrollToRegistration()
+        ? ["Abriendo formulario de registro..."]
+        : ["No encontramos la seccion #registro."];
+    }
+
+    if (normalizedCommand === "ping") {
+      return ["Pong!"];
     }
 
     if (normalizedCommand.startsWith("echo ")) {
@@ -371,8 +503,62 @@ function CmdApp({ onOpenApp }: CmdAppProps) {
       setOutput((currentOutput) => [...currentOutput, `C:/hackathon>${command}`, ...response, ""]);
     }
 
+    setCommandHistory((currentHistory) => [...currentHistory, command].slice(-30));
+    setHistoryIndex(null);
     setInputValue("");
     requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
+  function handleCommandKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Tab") {
+      event.preventDefault();
+
+      const autocompleteCommand = getAutocompleteCommand(inputValue);
+      if (autocompleteCommand) {
+        setInputValue(autocompleteCommand);
+        setHistoryIndex(null);
+      }
+
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+
+      setCommandHistory((currentHistory) => {
+        if (!currentHistory.length) {
+          return currentHistory;
+        }
+
+        const nextIndex =
+          historyIndex === null ? currentHistory.length - 1 : Math.max(0, historyIndex - 1);
+        setHistoryIndex(nextIndex);
+        setInputValue(currentHistory[nextIndex]);
+        return currentHistory;
+      });
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+
+      setCommandHistory((currentHistory) => {
+        if (!currentHistory.length || historyIndex === null) {
+          return currentHistory;
+        }
+
+        const nextIndex = historyIndex + 1;
+        if (nextIndex >= currentHistory.length) {
+          setHistoryIndex(null);
+          setInputValue("");
+        } else {
+          setHistoryIndex(nextIndex);
+          setInputValue(currentHistory[nextIndex]);
+        }
+
+        return currentHistory;
+      });
+    }
   }
 
   return (
@@ -395,7 +581,11 @@ function CmdApp({ onOpenApp }: CmdAppProps) {
           <input
             ref={inputRef}
             value={inputValue}
-            onChange={(event) => setInputValue(event.target.value)}
+            onChange={(event) => {
+              setInputValue(event.target.value);
+              setHistoryIndex(null);
+            }}
+            onKeyDown={handleCommandKeyDown}
             aria-label="Comando"
             autoCapitalize="off"
             autoComplete="off"
@@ -816,7 +1006,7 @@ function BrowserPage({ url, onNavigate }: { url: string; onNavigate: (url: strin
     return (
       <div className={styles.browserDocument}>
         <span>GAMES</span>
-        <h3>Arcade de ScreenOS</h3>
+        <h3>Arcade de Ingenia OS</h3>
         <p>Elige un juego dentro del navegador simulado.</p>
 
         <div className={styles.gameLauncherGrid}>
@@ -826,7 +1016,7 @@ function BrowserPage({ url, onNavigate }: { url: string; onNavigate: (url: strin
           </button>
           <button type="button" onClick={() => onNavigate("hackathon://games/tampiguesser")}>
             <strong>Tampiguesser</strong>
-            <span>Proximamente</span>
+            <span>Jugar ahora</span>
           </button>
         </div>
       </div>
@@ -864,7 +1054,7 @@ function BrowserPage({ url, onNavigate }: { url: string; onNavigate: (url: strin
         <span>BUSQUEDA LOCAL</span>
         <h3>{query}</h3>
         <p>
-          Resultados dentro del entorno ScreenOS. Prueba con brief, games o
+          Resultados dentro del entorno Ingenia OS. Prueba con brief, games o
           una URL completa.
         </p>
         <button type="button" onClick={() => onNavigate("hackathon://brief")}>
@@ -879,7 +1069,7 @@ function BrowserPage({ url, onNavigate }: { url: string; onNavigate: (url: strin
       <span>WEB PREVIEW</span>
       <h3>{titleFromUrl(url)}</h3>
       <p>
-        Esta vista mantiene la navegacion dentro de ScreenOS y deja la pagina
+        Esta vista mantiene la navegacion dentro de Ingenia OS y deja la pagina
         real disponible en una pestana externa.
       </p>
       <a href={url} target="_blank" rel="noreferrer">
@@ -968,6 +1158,11 @@ function BrowserApp() {
     setTabs(nextTabs);
   }
 
+  function handleTabContextMenu(event: ReactMouseEvent<HTMLButtonElement>, tabId: number) {
+    event.preventDefault();
+    closeTab(tabId);
+  }
+
   function travel(direction: "back" | "forward") {
     const nextIndex = direction === "back" ? activeTab.historyIndex - 1 : activeTab.historyIndex + 1;
     const safeIndex = clamp(nextIndex, 0, activeTab.history.length - 1);
@@ -1017,6 +1212,7 @@ function BrowserApp() {
             role="tab"
             aria-selected={tab.id === activeTabId}
             className={tab.id === activeTabId ? styles.activeTab : undefined}
+            onContextMenu={(event) => handleTabContextMenu(event, tab.id)}
             onClick={() => {
               setActiveTabId(tab.id);
               setAddress(tab.url);
@@ -1301,6 +1497,12 @@ export default function ScreenOS({
     }
   }
 
+  function closeAllWindows() {
+    setWindows([]);
+    setActiveWindowId(null);
+    pointerOperationRef.current = null;
+  }
+
   function minimizeWindow(id: string) {
     if (activeWindowId === id) {
       setActiveWindowId(null);
@@ -1547,12 +1749,27 @@ export default function ScreenOS({
               className={windowState.id === activeWindowId ? styles.activeTaskbarApp : undefined}
               data-minimized={windowState.mode === "minimized"}
               onClick={() => restoreFromTaskbar(windowState.id)}
+              onContextMenu={(event) => {
+                event.preventDefault();
+                closeWindow(windowState.id);
+              }}
               title={windowState.title}
             >
               <ScreenIcon src={APPS[windowState.appId].iconSrc} alt="" />
             </button>
           ))}
         </div>
+
+        <button
+          type="button"
+          className={styles.closeAllTaskbarButton}
+          onClick={closeAllWindows}
+          disabled={!windows.length}
+          title="Cerrar todas las ventanas"
+          aria-label="Cerrar todas las ventanas abiertas"
+        >
+          X
+        </button>
 
         <div className={styles.clock} aria-label="Hora actual">
           {clock}
