@@ -205,14 +205,16 @@ type CmdAppProps = {
   onOpenApp: (appId: AppId) => void;
 };
 
-const CMD_INTRO = [
-  `               +@@-
+const HACKATHON_ASCII_LOGO = `               +@@-
                .
           -#:  %%% .@@##@@@@#  =*:
       :#@@@%   +@@:.@@@-  @@@   @@@*.
     @@@@       +@@:.@@@   +@@      -@@@@
     .#@@@*     +@@:.@@@   +@@    #@@@*
-        =%@@   +@@:.@@@   +@@  @@#`,
+        =%@@   +@@:.@@@   +@@  @@#`;
+
+const CMD_INTRO = [
+  HACKATHON_ASCII_LOGO,
   "",
   "Hackathon ISND [v06/08/26]",
   "Ingenieria en Sistemas y Negocios Digitales, IEST Anahuac.",
@@ -221,11 +223,13 @@ const CMD_INTRO = [
 const HACKATHON_INFO_COMMANDS = new Set(["hackaton", "hackathon", "info", "informacion"]);
 
 const HACKATHON_INFO = [
-  "     _       _                 INFORMACION GENERAL",
-  "  __| |__   (_) _ __           Hackathon ISND - INGENIA \"<in>hack>\"",
-  " / _  '_ \\  | || '_ \\          IEST Anahuac",
-  "| (_| | | | | || | | |         Sistemas y Negocios Digitales",
-  " \\__,_| |_| |_||_| |_|         Primer Concurso de Programacion",
+  HACKATHON_ASCII_LOGO,
+  "",
+  "INFORMACION GENERAL",
+  "Hackathon ISND - INGENIA \"<in>hack>\"",
+  "IEST Anahuac",
+  "Sistemas y Negocios Digitales",
+  "Primer Concurso de Programacion",
   "",
   "La carrera de Ingenieria en Sistemas y Negocios Digitales (ISND) y la",
   "Sociedad de Alumnos de Ingenieria en Sistemas y Negocios Digitales",
@@ -246,9 +250,7 @@ const HACKATHON_INFO = [
   "  Veintitres Joyeria Blu Coffee        Pokeburrito",
   "  La Marquesita      Ingenia           Formacion Integral FESAL",
   "  ISND               JetBrains",
-  "",
-  "[REGISTRO]",
-  "  https://forms.gle/XsfQJUWYxTgDEEDWA",
+  ""
 ];
 
 function CmdApp({ onOpenApp }: CmdAppProps) {
@@ -415,6 +417,7 @@ type BrowserTab = {
 
 const HOME_URL = "hackathon://home";
 const REGISTRATION_URL = "https://forms.gle/XsfQJUWYxTgDEEDWA";
+const GAMES_URL = "hackathon://games";
 
 function normalizeBrowserUrl(value: string) {
   const url = value.trim();
@@ -439,6 +442,22 @@ function titleFromUrl(url: string) {
     return "Hackathon Home";
   }
 
+  if (url === GAMES_URL) {
+    return "Games";
+  }
+
+  if (url === "hackathon://agenda") {
+    return "Games";
+  }
+
+  if (url === "hackathon://games/breakout") {
+    return "Atari Breakout";
+  }
+
+  if (url === "hackathon://games/tampiguesser") {
+    return "Tampiguesser";
+  }
+
   if (url.startsWith("hackathon://search/")) {
     return "Busqueda";
   }
@@ -448,6 +467,295 @@ function titleFromUrl(url: string) {
   } catch {
     return url;
   }
+}
+
+type Brick = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  alive: boolean;
+  color: string;
+};
+
+function BreakoutGame() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [status, setStatus] = useState("Listo: mueve la barra y rompe todos los bloques");
+  const [speed, setSpeed] = useState(1);
+  const [resetToken, setResetToken] = useState(0);
+  const speedRef = useRef(speed);
+
+  useEffect(() => {
+    speedRef.current = speed;
+  }, [speed]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
+
+    if (!canvas || !context) {
+      return;
+    }
+
+    const gameCanvas = canvas;
+    const gameContext = context;
+    const paddle = { x: 0, width: 78, height: 10 };
+    const ball = { x: 0, y: 0, vx: 1.8, vy: -2.1, radius: 6 };
+    const keys = { left: false, right: false };
+    const bricks: Brick[] = [];
+    const brickColors = ["#334eac", "#7096d1", "#081f5c", "#4a65c7"];
+    let width = 0;
+    let height = 0;
+    let score = 0;
+    let lives = 3;
+    let finished = false;
+    let animationFrameId = 0;
+
+    function setCanvasSize() {
+      const rect = gameCanvas.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = Math.max(220, rect.width);
+      height = Math.max(150, rect.height);
+      gameCanvas.width = Math.floor(width * ratio);
+      gameCanvas.height = Math.floor(height * ratio);
+      gameContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+      paddle.width = clamp(width * 0.18, 54, 88);
+      paddle.x = clamp(paddle.x || width / 2 - paddle.width / 2, 10, width - paddle.width - 10);
+      ball.x = ball.x || width / 2;
+      ball.y = ball.y || height - 46;
+    }
+
+    function buildBricks() {
+      bricks.length = 0;
+      const columns = width < 340 ? 6 : 7;
+      const rows = height < 190 ? 3 : 4;
+      const gap = clamp(width * 0.012, 4, 7);
+      const margin = clamp(width * 0.04, 10, 16);
+      const brickWidth = (width - margin * 2 - gap * (columns - 1)) / columns;
+      const brickHeight = clamp(height * 0.07, 10, 16);
+      const startY = clamp(height * 0.16, 24, 36);
+
+      for (let row = 0; row < rows; row += 1) {
+        for (let column = 0; column < columns; column += 1) {
+          bricks.push({
+            x: margin + column * (brickWidth + gap),
+            y: startY + row * (brickHeight + gap),
+            width: brickWidth,
+            height: brickHeight,
+            alive: true,
+            color: brickColors[row % brickColors.length],
+          });
+        }
+      }
+    }
+
+    function resetBall() {
+      ball.x = width / 2;
+      ball.y = height - 46;
+      ball.vx = score % 2 === 0 ? 1.8 : -1.8;
+      ball.vy = -2.1;
+      paddle.x = width / 2 - paddle.width / 2;
+    }
+
+    function draw() {
+      gameContext.clearRect(0, 0, width, height);
+      gameContext.fillStyle = "#fff9f0";
+      gameContext.fillRect(0, 0, width, height);
+
+      gameContext.fillStyle = "rgba(208, 227, 255, 0.45)";
+      for (let lineY = 0; lineY < height; lineY += 18) {
+        gameContext.fillRect(0, lineY, width, 1);
+      }
+
+      bricks.forEach((brick) => {
+        if (!brick.alive) {
+          return;
+        }
+
+        gameContext.fillStyle = brick.color;
+        gameContext.fillRect(brick.x, brick.y, brick.width, brick.height);
+        gameContext.fillStyle = "rgba(255, 255, 255, 0.28)";
+        gameContext.fillRect(brick.x + 3, brick.y + 3, brick.width - 6, 3);
+      });
+
+      gameContext.fillStyle = "#081f5c";
+      gameContext.fillRect(paddle.x, height - 28, paddle.width, paddle.height);
+      gameContext.fillStyle = "#7096d1";
+      gameContext.fillRect(paddle.x + 7, height - 26, paddle.width - 14, 3);
+
+      gameContext.beginPath();
+      gameContext.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+      gameContext.fillStyle = "#334eac";
+      gameContext.fill();
+
+      gameContext.fillStyle = "#081f5c";
+      gameContext.font = "700 12px Consolas, monospace";
+      gameContext.fillText(`Score ${score}`, 12, 18);
+      gameContext.fillText(`Lives ${lives}`, width - 72, 18);
+    }
+
+    function update() {
+      if (!finished) {
+        if (keys.left) {
+          paddle.x -= 7;
+        }
+
+        if (keys.right) {
+          paddle.x += 7;
+        }
+
+        paddle.x = clamp(paddle.x, 8, width - paddle.width - 8);
+        ball.x += ball.vx * speedRef.current;
+        ball.y += ball.vy * speedRef.current;
+
+        if (ball.x <= ball.radius || ball.x >= width - ball.radius) {
+          ball.vx *= -1;
+        }
+
+        if (ball.y <= ball.radius) {
+          ball.vy *= -1;
+        }
+
+        const paddleTop = height - 28;
+        const hitsPaddle =
+          ball.y + ball.radius >= paddleTop &&
+          ball.y - ball.radius <= paddleTop + paddle.height &&
+          ball.x >= paddle.x &&
+          ball.x <= paddle.x + paddle.width &&
+          ball.vy > 0;
+
+        if (hitsPaddle) {
+          const hitOffset = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+          ball.vx = hitOffset * 3.1;
+          ball.vy = Math.max(-3.2, -Math.abs(ball.vy) - 0.03);
+        }
+
+        for (const brick of bricks) {
+          const hitsBrick =
+            brick.alive &&
+            ball.x + ball.radius >= brick.x &&
+            ball.x - ball.radius <= brick.x + brick.width &&
+            ball.y + ball.radius >= brick.y &&
+            ball.y - ball.radius <= brick.y + brick.height;
+
+          if (hitsBrick) {
+            brick.alive = false;
+            ball.vy *= -1;
+            score += 10;
+            setStatus(`Score ${score} | quedan ${bricks.filter((item) => item.alive).length} bloques`);
+            break;
+          }
+        }
+
+        if (!bricks.some((brick) => brick.alive)) {
+          finished = true;
+          setStatus("Ganaste. Buen golpe, demo lista.");
+        }
+
+        if (ball.y > height + ball.radius) {
+          lives -= 1;
+
+          if (lives <= 0) {
+            finished = true;
+            setStatus(`Game over | score ${score}`);
+          } else {
+            setStatus(`Te quedan ${lives} vidas`);
+            resetBall();
+          }
+        }
+      }
+
+      draw();
+      animationFrameId = window.requestAnimationFrame(update);
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      const rect = gameCanvas.getBoundingClientRect();
+      paddle.x = clamp(event.clientX - rect.left - paddle.width / 2, 8, width - paddle.width - 8);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "ArrowLeft" || event.key.toLowerCase() === "a") {
+        keys.left = true;
+      }
+
+      if (event.key === "ArrowRight" || event.key.toLowerCase() === "d") {
+        keys.right = true;
+      }
+    }
+
+    function handleKeyUp(event: KeyboardEvent) {
+      if (event.key === "ArrowLeft" || event.key.toLowerCase() === "a") {
+        keys.left = false;
+      }
+
+      if (event.key === "ArrowRight" || event.key.toLowerCase() === "d") {
+        keys.right = false;
+      }
+    }
+
+    setCanvasSize();
+    buildBricks();
+    resetBall();
+    draw();
+    setStatus("Listo: mouse, touch o flechas para jugar");
+
+    const resizeObserver = new ResizeObserver(() => {
+      setCanvasSize();
+      buildBricks();
+      resetBall();
+      draw();
+    });
+
+    resizeObserver.observe(gameCanvas);
+    gameCanvas.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    animationFrameId = window.requestAnimationFrame(update);
+
+    return () => {
+      resizeObserver.disconnect();
+      gameCanvas.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.cancelAnimationFrame(animationFrameId);
+    };
+  }, [resetToken]);
+
+  return (
+    <div className={styles.breakoutGame}>
+      <div className={styles.gameHeader}>
+        <div>
+          <span>ARCADE</span>
+          <h3>Atari Breakout</h3>
+        </div>
+        <div className={styles.gameControls}>
+          <label className={styles.speedControl}>
+            <span>Velocidad {Math.round(speed * 100)}%</span>
+            <input
+              type="range"
+              min="0.5"
+              max="1.5"
+              step="0.1"
+              value={speed}
+              onChange={(event) => setSpeed(Number(event.currentTarget.value))}
+              aria-label="Velocidad del juego"
+            />
+          </label>
+          <button type="button" onClick={() => setResetToken((currentToken) => currentToken + 1)}>
+            Reiniciar
+          </button>
+        </div>
+      </div>
+      <canvas
+        ref={canvasRef}
+        className={styles.breakoutCanvas}
+        aria-label="Juego Atari Breakout"
+        tabIndex={0}
+      />
+      <p className={styles.gameStatus}>{status}</p>
+    </div>
+  );
 }
 
 function BrowserPage({ url, onNavigate }: { url: string; onNavigate: (url: string) => void }) {
@@ -469,8 +777,8 @@ function BrowserPage({ url, onNavigate }: { url: string; onNavigate: (url: strin
           <button type="button" onClick={() => onNavigate("hackathon://brief")}>
             Brief
           </button>
-          <button type="button" onClick={() => onNavigate("hackathon://agenda")}>
-            Agenda
+          <button type="button" onClick={() => onNavigate(GAMES_URL)}>
+            Games
           </button>
         </div>
 
@@ -504,18 +812,46 @@ function BrowserPage({ url, onNavigate }: { url: string; onNavigate: (url: strin
     );
   }
 
-  if (url === "hackathon://agenda") {
+  if (url === GAMES_URL || url === "hackathon://agenda") {
     return (
       <div className={styles.browserDocument}>
-        <span>AGENDA</span>
-        <h3>Ruta sugerida</h3>
-        <p>Explorar, construir, validar y presentar con una historia compacta.</p>
-        <ol>
-          <li>Descubrimiento del problema</li>
-          <li>Diseno del flujo principal</li>
-          <li>Construccion del prototipo</li>
-          <li>Preparacion de demo</li>
-        </ol>
+        <span>GAMES</span>
+        <h3>Arcade de ScreenOS</h3>
+        <p>Elige un juego dentro del navegador simulado.</p>
+
+        <div className={styles.gameLauncherGrid}>
+          <button type="button" onClick={() => onNavigate("hackathon://games/breakout")}>
+            <strong>Atari Breakout</strong>
+            <span>Jugar ahora</span>
+          </button>
+          <button type="button" onClick={() => onNavigate("hackathon://games/tampiguesser")}>
+            <strong>Tampiguesser</strong>
+            <span>Proximamente</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (url === "hackathon://games/breakout") {
+    return <BreakoutGame />;
+  }
+
+  if (url === "hackathon://games/tampiguesser") {
+    return (
+      <div className={styles.embeddedGameFrame}>
+        <div className={styles.embeddedGameBar}>
+          <span>TampiGuessr</span>
+          <a href="https://tampiguessr.com/" target="_blank" rel="noreferrer">
+            Abrir externo
+          </a>
+        </div>
+        <iframe
+          src="https://tampiguessr.com/"
+          title="TampiGuessr"
+          loading="lazy"
+          allow="fullscreen; clipboard-read; clipboard-write; geolocation"
+        />
       </div>
     );
   }
@@ -528,7 +864,7 @@ function BrowserPage({ url, onNavigate }: { url: string; onNavigate: (url: strin
         <span>BUSQUEDA LOCAL</span>
         <h3>{query}</h3>
         <p>
-          Resultados dentro del entorno ScreenOS. Prueba con brief, agenda o
+          Resultados dentro del entorno ScreenOS. Prueba con brief, games o
           una URL completa.
         </p>
         <button type="button" onClick={() => onNavigate("hackathon://brief")}>

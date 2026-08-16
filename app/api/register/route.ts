@@ -72,6 +72,8 @@ function parseRegistrationInput(formData: FormData): RegistrationInput {
     nombreCompleto: formValue(formData, "nombreCompleto"),
     telefono: formValue(formData, "telefono"),
     correoElectronico: formValue(formData, "correoElectronico"),
+    edad: formValue(formData, "edad"),
+    genero: formValue(formData, "genero"),
     gradoEscolar: formValue(formData, "gradoEscolar"),
     escuelaProcedencia: formValue(formData, "escuelaProcedencia"),
     matriculaEscolar: formValue(formData, "matriculaEscolar"),

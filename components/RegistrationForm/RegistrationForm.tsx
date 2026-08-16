@@ -117,6 +117,10 @@ function getResponseMessage(response: RegistrationResponse) {
       return "El telefono debe incluir exactamente 10 digitos.";
     case "invalid_grade":
       return "Selecciona un grado escolar valido.";
+    case "invalid_age":
+      return "La edad debe ser un numero valido.";
+    case "invalid_gender":
+      return "Selecciona un genero valido.";
     default:
       return "No pudimos enviar tu registro. Revisa tus datos e intenta de nuevo.";
   }
@@ -348,6 +352,33 @@ export default function RegistrationForm() {
                 maxLength={254}
                 required
               />
+            </label>
+
+            <label className={styles.formField}>
+              <span>Edad *</span>
+              <input
+                name="edad"
+                type="number"
+                placeholder="18"
+                inputMode="numeric"
+                min={12}
+                max={99}
+                required
+              />
+            </label>
+
+            <label className={styles.formField}>
+              <span>Genero *</span>
+              <select name="genero" defaultValue="" required>
+                <option value="" disabled>
+                  Selecciona una opcion
+                </option>
+                <option value="femenino">Femenino</option>
+                <option value="masculino">Masculino</option>
+                <option value="no_binario">No binario</option>
+                <option value="prefiero_no_decirlo">Prefiero no decirlo</option>
+                <option value="otro">Otro</option>
+              </select>
             </label>
 
             <label className={styles.formField}>

@@ -35,6 +35,8 @@ const REQUIRED_FIELDS = [
   "nombreCompleto",
   "telefono",
   "correoElectronico",
+  "edad",
+  "genero",
   "gradoEscolar",
   "escuelaProcedencia",
   "matriculaEscolar",
@@ -56,6 +58,8 @@ export type RegistrationInput = {
   nombreCompleto: string;
   telefono: string;
   correoElectronico: string;
+  edad: string;
+  genero: string;
   gradoEscolar: string;
   escuelaProcedencia: string;
   matriculaEscolar: string;
@@ -174,6 +178,8 @@ function sanitizeRegistrationData(data: RegistrationInput): RegistrationData {
     nombreCompleto: clean(data.nombreCompleto),
     telefono: clean(data.telefono),
     correoElectronico: clean(data.correoElectronico),
+    edad: clean(data.edad),
+    genero: clean(data.genero),
     gradoEscolar: clean(data.gradoEscolar),
     escuelaProcedencia: clean(data.escuelaProcedencia),
     matriculaEscolar: clean(data.matriculaEscolar),
@@ -196,6 +202,23 @@ function validateRegistration(data: RegistrationInput):
     return { ok: false, error: "invalid_grade" };
   }
 
+  const edad = Number(clean(data.edad));
+  if (!Number.isInteger(edad) || edad < 12 || edad > 99) {
+    return { ok: false, error: "invalid_age" };
+  }
+
+  if (
+    ![
+      "femenino",
+      "masculino",
+      "no_binario",
+      "prefiero_no_decirlo",
+      "otro",
+    ].includes(clean(data.genero))
+  ) {
+    return { ok: false, error: "invalid_gender" };
+  }
+
   const normalized = normalizeRegistration(data);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized.correoElectronico)) {
     return { ok: false, error: "invalid_email" };
@@ -209,6 +232,7 @@ function validateRegistration(data: RegistrationInput):
     clean(data.nombreCompleto).length > 120 ||
     clean(data.telefono).length > 30 ||
     clean(data.correoElectronico).length > 254 ||
+    clean(data.edad).length > 3 ||
     clean(data.escuelaProcedencia).length > 140 ||
     clean(data.matriculaEscolar).length > 60 ||
     clean(data.tecnologias).length > 600 ||

@@ -24,6 +24,8 @@ const HEADERS = [
   "Nombre completo",
   "Numero de telefono",
   "Correo electronico",
+  "Edad",
+  "Genero",
   "Grado escolar",
   "Escuela de procedencia",
   "Matricula escolar",
@@ -41,6 +43,8 @@ const REQUIRED_FIELDS = [
   "nombreCompleto",
   "telefono",
   "correoElectronico",
+  "edad",
+  "genero",
   "gradoEscolar",
   "escuelaProcedencia",
   "matriculaEscolar",
@@ -243,6 +247,19 @@ function validateRegistration_(data) {
     return { ok: false, error: "invalid_grade" };
   }
 
+  const edad = Number(clean_(data.edad));
+  if (!Number.isInteger(edad) || edad < 12 || edad > 99) {
+    return { ok: false, error: "invalid_age" };
+  }
+
+  if (
+    ["femenino", "masculino", "no_binario", "prefiero_no_decirlo", "otro"].indexOf(
+      clean_(data.genero)
+    ) === -1
+  ) {
+    return { ok: false, error: "invalid_gender" };
+  }
+
   const normalized = normalizeRegistration_(data);
 
   if (!isValidEmail_(normalized.correoElectronico)) {
@@ -257,6 +274,7 @@ function validateRegistration_(data) {
     clean_(data.nombreCompleto).length > 120 ||
     clean_(data.telefono).length > 30 ||
     clean_(data.correoElectronico).length > 254 ||
+    clean_(data.edad).length > 3 ||
     clean_(data.escuelaProcedencia).length > 140 ||
     clean_(data.matriculaEscolar).length > 60 ||
     clean_(data.tecnologias).length > 600 ||
@@ -415,6 +433,8 @@ function appendRegistration_(sheet, data, normalized) {
     clean_(data.nombreCompleto),
     clean_(data.telefono),
     clean_(data.correoElectronico),
+    clean_(data.edad),
+    clean_(data.genero),
     clean_(data.gradoEscolar),
     clean_(data.escuelaProcedencia),
     clean_(data.matriculaEscolar),
@@ -435,6 +455,8 @@ function sanitizeRegistrationData_(data) {
     nombreCompleto: clean_(data.nombreCompleto),
     telefono: clean_(data.telefono),
     correoElectronico: clean_(data.correoElectronico),
+    edad: clean_(data.edad),
+    genero: clean_(data.genero),
     gradoEscolar: clean_(data.gradoEscolar),
     escuelaProcedencia: clean_(data.escuelaProcedencia),
     matriculaEscolar: clean_(data.matriculaEscolar),
@@ -565,10 +587,10 @@ function findDuplicate_(sheet, normalized) {
   for (let index = 0; index < rows.length; index += 1) {
     const row = rows[index];
     const rowNormalized = {
-      correoElectronico: clean_(row[11]) || normalizeEmail_(row[3]),
-      telefono: clean_(row[12]) || normalizePhone_(row[2]),
-      matriculaEscolar: clean_(row[13]) || normalizeMatricula_(row[6]),
-      nombreCompleto: clean_(row[14]) || normalizeText_(row[1]),
+      correoElectronico: clean_(row[13]) || normalizeEmail_(row[3]),
+      telefono: clean_(row[14]) || normalizePhone_(row[2]),
+      matriculaEscolar: clean_(row[15]) || normalizeMatricula_(row[8]),
+      nombreCompleto: clean_(row[16]) || normalizeText_(row[1]),
     };
 
     if (

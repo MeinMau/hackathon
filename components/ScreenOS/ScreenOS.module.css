@@ -673,6 +673,7 @@
   overflow: auto;
   background: var(--os-paper);
   color: var(--os-blue);
+  container-type: size;
 }
 
 .browserHome,
@@ -726,7 +727,9 @@
 
 .browserShortcutGrid button,
 .browserDocument button,
-.browserDocument a {
+.browserDocument a,
+.gameLauncherGrid button,
+.gameHeader button {
   border-color: var(--os-blue);
   background: var(--color-sky);
   color: var(--os-blue);
@@ -739,7 +742,11 @@
 .browserDocument button:hover,
 .browserDocument button:focus-visible,
 .browserDocument a:hover,
-.browserDocument a:focus-visible {
+.browserDocument a:focus-visible,
+.gameLauncherGrid button:hover,
+.gameLauncherGrid button:focus-visible,
+.gameHeader button:hover,
+.gameHeader button:focus-visible {
   background: var(--os-blue);
   color: var(--os-paper);
 }
@@ -776,6 +783,196 @@
   padding-left: 20px;
 }
 
+.gameLauncherGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.gameLauncherGrid button {
+  display: grid;
+  min-height: 112px;
+  align-content: space-between;
+  border: 2px solid var(--os-blue);
+  border-radius: 0;
+  cursor: pointer;
+  font: inherit;
+  padding: 14px;
+  text-align: left;
+}
+
+.gameLauncherGrid strong {
+  color: inherit;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.gameLauncherGrid span {
+  color: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.breakoutGame {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  box-sizing: border-box;
+  gap: clamp(6px, 1.7cqh, 12px);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: clamp(8px, 2.5cqh, 20px) clamp(10px, 3cqw, 24px);
+  background: var(--os-paper);
+  color: var(--os-blue);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.gameHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 2px solid var(--os-blue);
+  padding-bottom: clamp(6px, 1.4cqh, 12px);
+}
+
+.gameHeader span {
+  display: block;
+  color: var(--color-planetary);
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: clamp(9px, 2cqh, 11px);
+  font-weight: 900;
+}
+
+.gameHeader h3 {
+  margin: 3px 0 0;
+  color: var(--os-blue);
+  font-size: clamp(18px, min(4.6cqw, 8cqh), 34px);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.gameControls {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.speedControl {
+  display: grid;
+  width: clamp(104px, 20cqw, 160px);
+  gap: 3px;
+  color: var(--os-blue);
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: clamp(9px, 2cqh, 11px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.speedControl span {
+  color: inherit;
+  font-size: inherit;
+}
+
+.speedControl input {
+  width: 100%;
+  accent-color: var(--os-blue);
+}
+
+.gameHeader button {
+  flex: 0 0 auto;
+  border: 1px solid var(--os-blue);
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: clamp(9px, 2cqh, 11px);
+  font-weight: 800;
+  padding: clamp(5px, 1.4cqh, 7px) 10px;
+}
+
+.breakoutCanvas {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  border: 2px solid var(--os-blue);
+  background: var(--os-paper);
+  outline: none;
+  touch-action: none;
+}
+
+.breakoutCanvas:focus-visible {
+  box-shadow: 0 0 0 3px rgba(112, 150, 209, 0.32);
+}
+
+.gameStatus {
+  min-height: 0;
+  margin: 0;
+  color: #253a7a;
+  overflow: hidden;
+  font-size: clamp(10px, 2.4cqh, 12px);
+  font-weight: 800;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.embeddedGameFrame {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--os-paper);
+}
+
+.embeddedGameBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 2px solid var(--os-blue);
+  background: var(--os-paper);
+  color: var(--os-blue);
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 7px 10px;
+}
+
+.embeddedGameBar a {
+  border: 1px solid var(--os-blue);
+  border-radius: 4px;
+  background: var(--color-sky);
+  color: var(--os-blue);
+  padding: 5px 8px;
+  text-decoration: none;
+}
+
+.embeddedGameBar a:hover,
+.embeddedGameBar a:focus-visible {
+  background: var(--os-blue);
+  color: var(--os-paper);
+  outline: none;
+}
+
+.embeddedGameFrame iframe {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  background: #10141f;
+}
+
 @media (max-width: 620px) {
   .root {
     grid-template-rows: minmax(0, 1fr) 48px;
@@ -806,6 +1003,19 @@
 
   .browserShortcutGrid {
     grid-template-columns: 1fr;
+  }
+
+  .gameLauncherGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .gameHeader {
+    flex-wrap: wrap;
+  }
+
+  .gameControls {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .notesMenu {
