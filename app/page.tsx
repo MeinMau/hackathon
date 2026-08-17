@@ -195,13 +195,6 @@ export default function Home() {
       </section>
 
       <FAQ />
-      <section className={styles.cartoonBridge} aria-label="Ingenia">
-        <Image
-          className={styles.cartoonImage}
-          src={ingeniaCartoon}
-          alt="Ilustracion de Ingenia"
-        />
-      </section>
       <LaptopExperience />
     </main>
   );
